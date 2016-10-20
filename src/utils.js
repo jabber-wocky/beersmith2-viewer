@@ -1,3 +1,5 @@
+var xml2json = require("simple-xml2json");
+
 var Utils = function () {};
 
 Utils.prototype.replaceAll = function (find, replace, str) {
@@ -33,33 +35,15 @@ Utils.prototype.parseXml = function (xmlStr) {
 Utils.prototype.loadXMLDoc = function (filename) {
     var xhttp;
     if (window.ActiveXObject)
-      {
+    {
       xhttp = new ActiveXObject("Msxml2.XMLHTTP");
-      }
-    else
-      {
+    } else {
       xhttp = new XMLHttpRequest();
-      }
+    }
     xhttp.open("GET", filename, false);
-    try {xhttp.responseType = "msxml-document"} catch(err) {} // Helping IE11
+    //try {xhttp.responseType = "msxml-document"} catch(err) {} // Helping IE11
     xhttp.send("");
     return this.parseXml(xhttp.responseText);
-};
-
-Utils.prototype.loadXSLDoc = function (filename) {
-    var xhttp;
-    if (window.ActiveXObject)
-      {
-      xhttp = new ActiveXObject("Msxml2.XMLHTTP");
-      }
-    else
-      {
-      xhttp = new XMLHttpRequest();
-      }
-    xhttp.open("GET", filename, false);
-    try {xhttp.responseType = "msxml-document"} catch(err) {} // Helping IE11
-    xhttp.send("");
-    return xhttp.responseXML;
 };
 
 module.exports = new Utils();

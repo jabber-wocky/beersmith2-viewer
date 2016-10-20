@@ -20,8 +20,11 @@
     "jquery": "^3.1.1",
     "json-loader": "^0.5.4",
     "lodash": "^4.16.4",
+    "raw-loader": "^0.5.1",
+    "simple-xml2json": "^1.2.3",
     "style-loader": "^0.13.1",
     "url-loader": "^0.5.7",
-    "webpack": "^1.13.2"
+    "webpack": "^1.13.2",
+    "xml2json-light": "^1.0.4"
   }
 }

@@ -12,8 +12,17 @@ var config = module.exports = {
 	},
 };
 
+config.resolve = {
+	root: path.join(__dirname, 'src'),
+	modulesDirectory: ["node_modules","web_modules"]
+}
+
 config.module = {
   loaders: [
+  	{
+  		test: /\.xsl$/,
+  		loader: 'raw-loader'
+  	},
 	{
 		test: /\.woff(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/,
 		loader: "url-loader?limit=10000&minetype=application/font-woff"
