@@ -1,5 +1,5 @@
 
 module.exports = `
-<div class="page-header"><h1>Recipes</h1></div>
+<h1 class="page-header">Recipes</h1>
 <div id="recipes"></div>
 `

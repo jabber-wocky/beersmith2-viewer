@@ -61,7 +61,7 @@
 
 	var firebase = __webpack_require__(28);
 	var page = __webpack_require__(34);
-	var myAuth = __webpack_require__(44);
+	var myAuth = __webpack_require__(46);
 
 	firebase.initializeApp(config);
 	myAuth.init(firebase);
@@ -530,7 +530,7 @@
 
 
 	// module
-	exports.push([module.id, "body {\r\n\r\n  padding-top: 30px;\r\n}\r\n\r\n@media (max-width: 767px) {\r\n  .navbar-nav .open .dropdown-menu > li > .navbar-text {\r\n      padding: 5px 15px 5px 25px;\r\n  }\r\n}\r\n\r\n.user {\r\n  display: inline-block;\r\n  width: 30px;\r\n  height: 30px;\r\n  border-radius: 50%;\r\n  background-repeat: no-repeat;\r\n  background-position: center center;\r\n  background-size: cover;\r\n}\r\n", ""]);
+	exports.push([module.id, "body {\r\n  padding-top: 30px;\r\n}\r\nh1.page-header { padding-bottom:9px; border-bottom:1px solid #eee; margin-bottom:20px; }\r\n#content { margin-top:40px; }\r\n\r\n@media (max-width: 767px) {\r\n  .navbar-nav .open .dropdown-menu > li > .navbar-text {\r\n      padding: 5px 15px 5px 25px;\r\n  }\r\n}\r\n\r\n.navbar-nav legend {\r\n  margin-bottom:0;\r\n  font-size:14px;\r\n  border-bottom:0;\r\n  font-weight: normal;\r\n  line-height: 1.42857143;\r\n}\r\n\r\n.navbar-nav .switch-light {\r\n  padding:3px 20px;\r\n  margin-bottom:0;\r\n}\r\n\r\n.user {\r\n  display: inline-block;\r\n  width: 30px;\r\n  height: 30px;\r\n  border-radius: 50%;\r\n  background-repeat: no-repeat;\r\n  background-position: center center;\r\n  background-size: cover;\r\n}\r\n", ""]);
 
 	// exports
 
@@ -13914,8 +13914,8 @@
 /* 34 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var _ = __webpack_require__(45);
-	var utils = __webpack_require__(35);
+	var _ = __webpack_require__(35);
+	var utils = __webpack_require__(37);
 
 	var Page = function () {
 	};
@@ -13938,7 +13938,7 @@
 	  navbar.innerHTML = __webpack_require__(38)(this.firebase.auth().currentUser);
 	  document.getElementById('btn-logout').addEventListener('click', this.myAuth.logout.bind(this.myAuth), false);
 	  document.getElementById('menu-recipe-link').addEventListener('click', this.recipes.bind(this), false);
-
+	  document.getElementById('menu-ingredients-link').addEventListener('click', this.ingredients.bind(this), false);
 	  // load pages
 	  this.settingsModal();
 	  this.recipes();
@@ -13988,8 +13988,7 @@
 	  if (this.data.recipes === '' || this.data.recipes === null)
 	    return;
 
-	  this._clear();
-	  xsl = utils.parseXml(__webpack_require__(47));
+	  xsl = utils.parseXml(__webpack_require__(43));
 
 	  xsltProcessor = new XSLTProcessor();
 	  xsltProcessor.importStylesheet(xsl);
@@ -13997,32 +13996,82 @@
 	  xsltProcessor.setParameter(null, "recipe", recipe);
 	  resultDocument = xsltProcessor.transformToFragment(this.data.recipes, document);
 	  
-	  console.log(resultDocument);
-	  document.getElementById("content").appendChild(resultDocument);
-	    
-	  /*  
-	    $(".note").each(function () {
-	      $(this).html($(this).html().replace(/\n/g,"<br />"));
-	    });
+	  this._showHtmlString(__webpack_require__(44));
+	  document.getElementById('recipe-details').appendChild(resultDocument);
 
-	    getCalc();
-	    
-	    loadUnitToggle();
-	    
-	    $("#recipe-details").show();
-	    */
+	  utils.getCalc();  
+
+	  this.refreshUnits();
+
+	  document.querySelectorAll('.note').forEach(function (ele) {
+	    var html = ele.innerHTML.replace(/\n/g,"<br />");
+	    ele.innerHTML = html;
+	  }, this);
+
 	}
 
-	Page.prototype.settingsModal = function () {
-	  this._addModal(__webpack_require__(43));
+	Page.prototype.refreshUnits = function () {
+	  document.querySelectorAll('[data-unit]').forEach(function(ele) {
+	    if (ele.attributes['data-unit'].value === this.settings.unit) {
+	      ele.classList.remove("hide");
+	    } else {
+	      ele.classList.add("hide");
+	    }
+	  }, this);
+	}
 
-	  const dbRefObject = this.firebase.database().ref('settings/' + this.firebase.auth().currentUser.uid + '/');
+	Page.prototype.ingredients = function () {
+	  this._showHtmlString(__webpack_require__(51));
+	  this.displayHops();
+	  this.displayGrains();
+	  this.displayYeasts();
+	  this.refreshUnits();
+	}
+
+	Page.prototype.displayGrains = function () {
+	  xsl = utils.parseXml(__webpack_require__(52));
+	  xsltProcessor = new XSLTProcessor();
+	  xsltProcessor.importStylesheet(xsl);
+	  resultDocument = xsltProcessor.transformToFragment(this.data.grains, document);
+	  document.getElementById("ingredients").appendChild(resultDocument);
+	}
+
+	Page.prototype.displayHops = function () {
+	  xsl = utils.parseXml(__webpack_require__(53));
+	  xsltProcessor = new XSLTProcessor();
+	  xsltProcessor.importStylesheet(xsl);
+	  resultDocument = xsltProcessor.transformToFragment(this.data.hops, document);
+	  document.getElementById("ingredients").appendChild(resultDocument);
+	}
+
+	Page.prototype.displayYeasts = function () {
+	  xsl = utils.parseXml(__webpack_require__(54));
+	  xsltProcessor = new XSLTProcessor();
+	  xsltProcessor.importStylesheet(xsl);
+	  resultDocument = xsltProcessor.transformToFragment(this.data.yeasts, document);
+	  document.getElementById("ingredients").appendChild(resultDocument);
+	}
+
+
+	Page.prototype.settingsModal = function () {
+	  this._addModal(__webpack_require__(45));
+
+	  const dbSettingsRefObject = this.firebase.database().ref('settings/' + this.firebase.auth().currentUser.uid + '/');
+	  const dbUserRefObject = this.firebase.database().ref('user/' + this.firebase.auth().currentUser.uid + '/');
 
 	  /*------------------------------------------------
 	    LISTENERS
 	   ------------------------------------------------ */
+	   dbUserRefObject.child('unit').on('value', function(snapshot) {
+	    this.settings.unit = 'metric';
+	    if (snapshot.exists()) {
+	      this.settings.unit = snapshot.val();
+	      document.getElementById('unit').value = this.settings.unit;
+	      this.refreshUnits();
+	    }
+	   }.bind(this));
 	  // recipes
-	  dbRefObject.child('bsmxRecipesUrl').on('value', function(snapshot) {
+	  dbSettingsRefObject.child('bsmxRecipesUrl').on('value', function(snapshot) {
 	    console.log('recipe url updated');
 	    this.settings.bsmxRecipesUrl = '';
 	    this.data.recipes = '';
@@ -14031,10 +14080,13 @@
 	      this.data.recipes = utils.loadXMLDoc(this.settings.bsmxRecipesUrl);
 	      document.getElementById('bsmx-recipes-url').value = this.settings.bsmxRecipesUrl;
 	    }
-	    this.recipes();
+
+	    if (document.getElementById('recipes') !== null) {
+	      this.recipes();  
+	    }
 	  }.bind(this));
 	  // grains
-	  dbRefObject.child('bsmxGrainsUrl').on('value', function(snapshot) {
+	  dbSettingsRefObject.child('bsmxGrainsUrl').on('value', function(snapshot) {
 	    console.log('grain url updated');
 	    this.settings.bsmxGrainsUrl = '';
 	    this.data.grains = '';
@@ -14043,9 +14095,12 @@
 	      this.data.grains = utils.loadXMLDoc(this.settings.bsmxGrainsUrl);
 	      document.getElementById('bsmx-grains-url').value = this.settings.bsmxGrainsUrl;
 	    }
+	    if (document.getElementById('ingredients') !== null) {
+	      this.ingredients();  
+	    }
 	  }.bind(this));
 	  // hops
-	  dbRefObject.child('bsmxRecipesUrl').on('value', function(snapshot) {
+	  dbSettingsRefObject.child('bsmxHopsUrl').on('value', function(snapshot) {
 	    console.log('hop url updated');
 	    this.settings.bsmxHopsUrl = '';
 	    this.data.hops = '';
@@ -14054,9 +14109,12 @@
 	      this.data.hops = utils.loadXMLDoc(this.settings.bsmxHopsUrl);
 	      document.getElementById('bsmx-hops-url').value = this.settings.bsmxHopsUrl;
 	    }
+	    if (document.getElementById('ingredients') !== null) {
+	      this.ingredients();  
+	    }
 	  }.bind(this));
 	  // yeasts
-	  dbRefObject.child('bsmxYeastsUrl').on('value', function(snapshot) {
+	  dbSettingsRefObject.child('bsmxYeastsUrl').on('value', function(snapshot) {
 	    console.log('yeast url updated');
 	    this.settings.bsmxYeastsUrl = '';
 	    this.data.yeasts = '';
@@ -14065,6 +14123,9 @@
 	      this.data.yeasts = utils.loadXMLDoc(this.settings.bsmxYeastsUrl);
 	      document.getElementById('bsmx-yeasts-url').value = this.settings.bsmxYeastsUrl;
 	    }
+	    if (document.getElementById('ingredients') !== null) {
+	      this.ingredients();  
+	    }
 	  }.bind(this));
 
 	  /*------------------------------------------------
@@ -14072,10 +14133,11 @@
 	   ------------------------------------------------ */
 	  document.getElementById('btn-settings-save').addEventListener('click', function () {
 	    console.log("Saving settings");
-	    dbRefObject.child('bsmxRecipesUrl').set(document.getElementById('bsmx-recipes-url').value);
-	    dbRefObject.child('bsmxGrainsUrl').set(document.getElementById('bsmx-grains-url').value);
-	    dbRefObject.child('bsmxHopsUrl').set(document.getElementById('bsmx-hops-url').value);
-	    dbRefObject.child('bsmxYeastsUrl').set(document.getElementById('bsmx-yeasts-url').value);
+	    dbSettingsRefObject.child('bsmxRecipesUrl').set(document.getElementById('bsmx-recipes-url').value);
+	    dbSettingsRefObject.child('bsmxGrainsUrl').set(document.getElementById('bsmx-grains-url').value);
+	    dbSettingsRefObject.child('bsmxHopsUrl').set(document.getElementById('bsmx-hops-url').value);
+	    dbSettingsRefObject.child('bsmxYeastsUrl').set(document.getElementById('bsmx-yeasts-url').value);
+	    dbUserRefObject.child('unit').set(document.getElementById('unit').value);
 	  }, false);
 
 	}
@@ -14112,439 +14174,6 @@
 
 /***/ },
 /* 35 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var xml2json = __webpack_require__(36);
-
-	var Utils = function () {};
-
-	Utils.prototype.replaceAll = function (find, replace, str) {
-	  return str.replace(new RegExp(find, 'g'), replace);
-	};
-
-	Utils.prototype.htmlDecode = function (input){
-	  var e = document.createElement('textarea');
-	  e.innerHTML = input;
-	  var result = "";
-	  result = this.replaceAll("&"," &amp; ", e.value);
-	  result = this.replaceAll(" < "," &lt; ", result);
-	  result = this.replaceAll(" > "," &gt; ", result);
-	  result = this.replaceAll("","", result);
-
-	  return result;
-	};
-
-	Utils.prototype.parseXml = function (xmlStr) {
-	    xmlStr = this.htmlDecode(xmlStr);
-
-	    if (window.DOMParser) {
-	        return ( new window.DOMParser() ).parseFromString(xmlStr, "text/xml");
-	    } else if (typeof window.ActiveXObject != "undefined" && new window.ActiveXObject("Microsoft.XMLDOM")) {
-	        var xmlDoc = new window.ActiveXObject("Microsoft.XMLDOM");
-	        xmlDoc.async = "false";
-	        xmlDoc.loadXML(xmlStr);
-	        return xmlDoc;
-	    }
-	    return null;
-	};
-
-	Utils.prototype.loadXMLDoc = function (filename) {
-	    var xhttp;
-	    if (window.ActiveXObject)
-	    {
-	      xhttp = new ActiveXObject("Msxml2.XMLHTTP");
-	    } else {
-	      xhttp = new XMLHttpRequest();
-	    }
-	    xhttp.open("GET", filename, false);
-	    //try {xhttp.responseType = "msxml-document"} catch(err) {} // Helping IE11
-	    xhttp.send("");
-	    return this.parseXml(xhttp.responseText);
-	};
-
-	module.exports = new Utils();
-
-/***/ },
-/* 36 */
-/***/ function(module, exports, __webpack_require__) {
-
-	
-	module.exports = __webpack_require__(37);
-
-
-/***/ },
-/* 37 */
-/***/ function(module, exports) {
-
-	/*
-	xml2json v 1.1
-	copyright 2005-2007 Thomas Frank
-
-	This program is free software under the terms of the 
-	GNU General Public License version 2 as published by the Free 
-	Software Foundation. It is distributed without any warranty.
-	*/
-
-	exports.parser = function (xmlcode, ignoretags, debug) {
-	    if (!ignoretags) { ignoretags = "" }    ;
-	    xmlcode = xmlcode.replace(/\s*\/>/g, '/>');
-	    xmlcode = xmlcode.replace(/<\?[^>]*>/g, "");
-	    var pat = /<!\[CDATA\[.*?\]\]>/g;
-	    var result = pat.exec(xmlcode);
-	    while (result) {
-	        xmlcode = xmlcode.replace(result[0], result[0].substring(9, result[0].lastIndexOf(']]>')));
-	        pat.lastIndex = 0;
-	        result = pat.exec(xmlcode);
-	    }
-	    xmlcode = xmlcode.replace(/<\![^>]*>/g, "");
-	    if (!ignoretags.sort) { ignoretags = ignoretags.split(",") }    ;
-	    var x = exports.no_fast_endings(xmlcode);
-	    x = exports.attris_to_tags(x);
-	    x = escape(x);
-	    x = x.split("%3C").join("<").split("%3E").join(">").split("%3D").join("=").split("%22").join("\"");
-	    for (var i = 0; i < ignoretags.length; i++) {
-	        x = x.replace(new RegExp("<" + ignoretags[i] + ">", "g"), "*$**" + ignoretags[i] + "**$*");
-	        x = x.replace(new RegExp("</" + ignoretags[i] + ">", "g"), "*$***" + ignoretags[i] + "**$*")
-	    }    ;
-	    x = '<JSONTAGWRAPPER>' + x + '</JSONTAGWRAPPER>';
-	    exports.xmlobject = {};
-	    var y = exports.xml_to_object(x).jsontagwrapper;
-	    if (debug) { y = exports.show_json_structure(y, debug) }    ;
-	    return y
-	}
-
-	exports.xml_to_object = function (xmlcode) {
-	    var x = xmlcode.replace(/<\//g, "�");
-	    x = x.split("<");
-	    var y = [];
-	    var level = 0;
-	    var opentags = [];
-	    for (var i = 1; i < x.length; i++) {
-	        var tagname = x[i].split(">")[0];
-	        opentags.push(tagname);
-	        level++
-	        y.push(level + "<" + x[i].split("�")[0]);
-	        var currentX = x[i];
-	        var tagString = "�" + opentags[opentags.length - 1] + ">";
-	        while (currentX.indexOf(tagString) >= 0) {
-	            level--;
-	            opentags.pop();
-	            var index = currentX.indexOf(tagString) + tagString.length;
-	            currentX = currentX.substring(index);
-	            tagString = "�" + opentags[opentags.length - 1] + ">";
-	        }
-	    }    ;
-	    var oldniva = -1;
-	    var objname = "exports.xmlobject";
-	    for (var i = 0; i < y.length; i++) {
-	        var preeval = "";
-	        var niva = parseInt(y[i].split("<")[0], 10);
-	        var tagnamn = y[i].split("<")[1].split(">")[0];
-	        tagnamn = tagnamn.toLowerCase();
-	        var rest = y[i].split(">")[1];
-	        if (niva <= oldniva) {
-	            var tabort = oldniva - niva + 1;
-	            for (var j = 0; j < tabort; j++) { objname = objname.substring(0, objname.lastIndexOf('["')) }
-	        }        ;
-	        objname += '["' + tagnamn + '"]';
-	        var pobject = objname.substring(0, objname.lastIndexOf("["));
-	        if (eval("typeof " + pobject) != "object") { preeval += pobject + "={value:" + pobject + "};\n" }        ;
-	        var objlast = objname.substring(objname.lastIndexOf('["') + 2, objname.length - 2);
-	        var already = false;
-	        for (k in eval(pobject)) { if (k == objlast) { already = true } }        ;
-	        var onlywhites = true;
-	        for (var s = 0; s < rest.length; s += 3) {
-	            if (rest.charAt(s) != "%") { onlywhites = false }
-	        }        ;
-	        var nextNiva = Number.MAX_VALUE;
-	        if (i + 1 < y.length) {
-	            nextNiva = parseInt(y[i + 1].split("<")[0], 10);
-	        }
-	        if (rest != "" && (!onlywhites || nextNiva <= niva)) {
-	            if (rest / 1 != rest) {
-	                rest = "'" + rest.replace(/\'/g, "\\'") + "'";
-	                rest = rest.replace(/\*\$\*\*\*/g, "</");
-	                rest = rest.replace(/\*\$\*\*/g, "<");
-	                rest = rest.replace(/\*\*\$\*/g, ">")
-	            }
-	        } 
-	        else { rest = "{}" }        ;
-	        if (rest.charAt(0) == "'") { rest = 'unescape(' + rest + ')' }        ;
-	        if (already && !eval(objname + ".sort")) { preeval += objname + "=[" + objname + "];\n" }        ;
-	        var before = "="; after = "";
-	        if (already) { before = ".push("; after = ")" }        ;
-	        var toeval = preeval + objname + before + rest + after;
-	        eval(toeval);
-	        if (eval(objname + ".sort")) { objname += "[" + eval(objname + ".length-1") + "]" }        ;
-	        oldniva = niva
-	    }    ;
-	    return exports.xmlobject
-	}
-
-	exports.show_json_structure = function (obj, debug, l) {
-	    var x = '';
-	    if (obj.sort) { x += "[\n" } else { x += "{\n" }    ;
-	    for (var i in obj) {
-	        if (!obj.sort) { x += '"' + i + '":' }        ;
-	        if (typeof obj[i] == "object") {
-	            x += exports.show_json_structure(obj[i], false, 1)
-	        }
-	        else {
-	            if (typeof obj[i] == "function") {
-	                var v = obj[i] + "";
-	                //v=v.replace(/\t/g,"");
-	                x += v
-	            }
-	            else if (typeof obj[i] != "string") { x += obj[i] + ",\n" }
-	            else { x += "'" + obj[i].replace(/\'/g, "\\'").replace(/\n/g, "\\n").replace(/\t/g, "\\t").replace(/\r/g, "\\r") + "',\n" }
-	        }
-	    }    ;
-	    if (obj.sort) { x += "],\n" } else { x += "},\n" }    ;
-	    if (!l) {
-	        x = x.substring(0, x.lastIndexOf(","));
-	        x = x.replace(new RegExp(",\n}", "g"), "\n}");
-	        x = x.replace(new RegExp(",\n]", "g"), "\n]");
-	        var y = x.split("\n"); x = "";
-	        var lvl = 0;
-	        for (var i = 0; i < y.length; i++) {
-	            if (y[i].indexOf("}") >= 0 || y[i].indexOf("]") >= 0) { lvl-- }            ;
-	            tabs = ""; for (var j = 0; j < lvl; j++) { tabs += "\t" }            ;
-	            x += tabs + y[i] + "\n";
-	            if (y[i].indexOf("{") >= 0 || y[i].indexOf("[") >= 0) { lvl++ }
-	        }        ;
-	        if (debug == "html") {
-	            x = x.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-	            x = x.replace(/\n/g, "<BR>").replace(/\t/g, "&nbsp;&nbsp;&nbsp;&nbsp;")
-	        }        ;
-	        if (debug == "compact") { x = x.replace(/\n/g, "").replace(/\t/g, "") }
-	    }    ;
-	    return x
-	}
-
-	exports.no_fast_endings = function (x) {
-	    x = x.split("/>");
-	    for (var i = 1; i < x.length; i++) {
-	        var t = x[i - 1].substring(x[i - 1].lastIndexOf("<") + 1).split(" ")[0];
-	        x[i] = "></" + t + ">" + x[i]
-	    }    ;
-	    x = x.join("");
-	    return x
-	}
-
-	exports.attris_to_tags = function (x) {
-	    var d = ' ="\''.split("");
-	    x = x.split(">");
-	    for (var i = 0; i < x.length; i++) {
-	        var temp = x[i].split("<");
-	        for (var r = 0; r < 4; r++) { temp[0] = temp[0].replace(new RegExp(d[r], "g"), "_jsonconvtemp" + r + "_") }        ;
-	        if (temp[1]) {
-	            temp[1] = temp[1].replace(/'/g, '"');
-	            temp[1] = temp[1].split('"');
-	            for (var j = 1; j < temp[1].length; j += 2) {
-	                for (var r = 0; r < 4; r++) { temp[1][j] = temp[1][j].replace(new RegExp(d[r], "g"), "_jsonconvtemp" + r + "_") }
-	            }            ;
-	            temp[1] = temp[1].join('"')
-	        }        ;
-	        x[i] = temp.join("<")
-	    }    ;
-	    x = x.join(">");
-	    x = x.replace(/ ([^=]*)=([^ |>]*)/g, "><$1>$2</$1");
-	    x = x.replace(/>"/g, ">").replace(/"</g, "<");
-	    for (var r = 0; r < 4; r++) { x = x.replace(new RegExp("_jsonconvtemp" + r + "_", "g"), d[r]) }    ;
-	    return x
-	}
-
-
-	if (!Array.prototype.push) {
-	    Array.prototype.push = function (x) {
-	        this[this.length] = x;
-	        return true
-	    }
-	};
-
-	if (!Array.prototype.pop) {
-	    Array.prototype.pop = function () {
-	        var response = this[this.length - 1];
-	        this.length--;
-	        return response
-	    }
-	};
-
-
-
-/***/ },
-/* 38 */
-/***/ function(module, exports) {
-
-	
-	module.exports = function (firebaseUser) {
-	  return `
-	<ul class="nav navbar-nav">
-	  <li><a id="menu-recipe-link" href="#">Recipes</a></li>
-	  <li><a href="#">Ingredients</a></li>
-	</ul>
-	<ul class="nav navbar-nav navbar-right" id="navbar-menu-right">
-	  <li class="dropdown" id="user-info">
-	    <a href="#" id="user-info-pic" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
-	      ${ firebaseUser.displayName } <span class="caret"></span>
-	    </a>
-	    <ul class="dropdown-menu">
-	      <li><a href="#" data-toggle="modal" data-target="#modal-settings">Settings</a></li>
-	      <li role="separator" class="divider"></li>
-	      <li><a id="btn-logout" href="#">Log out</a></li>
-	    </ul>
-	  </li>
-	</ul>
-	`;
-	};
-
-/***/ },
-/* 39 */
-/***/ function(module, exports) {
-
-	
-	module.exports = `
-	<ul class="nav navbar-nav">
-	  <li><a href="#">Getting Started</a></li>
-	</ul>
-	<ul class="nav navbar-nav navbar-right" id="navbar-menu-right">
-	  <li id="user-info"><a id="btn-login" href="#">Login</a></li>
-	</ul>
-
-	`;
-
-/***/ },
-/* 40 */
-/***/ function(module, exports) {
-
-	module.exports = `
-		 <div class="page-header"><h1>Getting Started</h1></div>
-		 <p>To get started please <em>login</em>.</p>
-		`;
-
-/***/ },
-/* 41 */
-/***/ function(module, exports) {
-
-	module.exports = "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\r\n<xsl:stylesheet version=\"1.0\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\">\r\n    <xsl:param name=\"path\" />\r\n\r\n    <xsl:template match=\"Data\">\r\n        <ul>\r\n            <xsl:apply-templates select=\"./Recipe\">\r\n                <xsl:sort select=\"F_R_NAME\" data-type=\"text\" order=\"ascending\" />\r\n            </xsl:apply-templates>\r\n        </ul>\r\n\r\n        <xsl:apply-templates select=\"./Table\">\r\n            <xsl:sort select=\"Name\" data-type=\"text\" order=\"ascending\" />\r\n        </xsl:apply-templates>\r\n    </xsl:template>\r\n\r\n    <xsl:template match=\"Table\">\r\n        <h3><xsl:value-of select=\"Name\"/></h3>\r\n        <ul>\r\n            <xsl:apply-templates select=\"./Data/Recipe\">\r\n                <xsl:sort select=\"F_R_NAME\" />\r\n            </xsl:apply-templates>\r\n        </ul>\r\n    </xsl:template>\r\n\r\n    <xsl:template match=\"Recipe\">\r\n        <xsl:if test=\"boolean(F_R_NAME)\">\r\n            <li>\r\n                <a>\r\n                    <xsl:attribute name=\"class\">recipe-detail-link</xsl:attribute>\r\n                    <xsl:attribute name=\"href\">#</xsl:attribute>\r\n                    <xsl:attribute name=\"data-folder\">\r\n                        <xsl:value-of select=\"../../Name\" />\r\n                    </xsl:attribute>\r\n                    <xsl:attribute name=\"data-recipe\">\r\n                        <xsl:call-template name=\"replace-string\">\r\n                          <xsl:with-param name=\"text\" select=\"F_R_NAME\"/>\r\n                          <xsl:with-param name=\"replace\" select=\"'%'\" />\r\n                          <xsl:with-param name=\"with\" select=\"'%25'\"/>\r\n                        </xsl:call-template>\r\n                    </xsl:attribute>\r\n                    \r\n                    <xsl:value-of select=\"F_R_NAME\" />\r\n                </a>\r\n            </li>\r\n        </xsl:if>\r\n\r\n        <xsl:apply-templates select=\"./Data\">\r\n            \r\n        </xsl:apply-templates>\r\n    </xsl:template>\r\n\t\r\n\t<xsl:template name=\"replace-string\">\r\n\t\t<xsl:param name=\"text\"/>\r\n\t\t<xsl:param name=\"replace\"/>\r\n\t\t<xsl:param name=\"with\"/>\r\n\t\t<xsl:choose>\r\n\t\t  <xsl:when test=\"contains($text,$replace)\">\r\n\t\t\t<xsl:value-of select=\"substring-before($text,$replace)\"/>\r\n\t\t\t<xsl:value-of select=\"$with\"/>\r\n\t\t\t<xsl:call-template name=\"replace-string\">\r\n\t\t\t  <xsl:with-param name=\"text\" select=\"substring-after($text,$replace)\"/>\r\n\t\t\t  <xsl:with-param name=\"replace\" select=\"$replace\"/>\r\n\t\t\t  <xsl:with-param name=\"with\" select=\"$with\"/>\r\n\t\t\t</xsl:call-template>\r\n\t\t  </xsl:when>\r\n\t\t  <xsl:otherwise>\r\n\t\t\t<xsl:value-of select=\"$text\"/>\r\n\t\t  </xsl:otherwise>\r\n\t\t</xsl:choose>\r\n  </xsl:template>\r\n</xsl:stylesheet>"
-
-/***/ },
-/* 42 */
-/***/ function(module, exports) {
-
-	
-	module.exports = `
-	<div class="page-header"><h1>Recipes</h1></div>
-	<div id="recipes"></div>
-	`;
-
-/***/ },
-/* 43 */
-/***/ function(module, exports) {
-
-	module.exports = `
-		 <div class="modal fade" id="modal-settings" tabindex="-1" role="dialog">
-		  <div class="modal-dialog" role="document">
-		    <div class="modal-content">
-		      <div class="modal-header">
-		        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-		        <h4 class="modal-title">User Settings</h4>
-		      </div>
-		      <div class="modal-body">
-				<div class="form-group">
-					<label for="bsmx-recipes-url">Recipes</label>
-					<input type="url" class="form-control" id="bsmx-recipes-url" placeholder="">
-				</div>
-				<div class="form-group">
-					<label for="bsmx-grains-url">Grains</label>
-					<input type="url" class="form-control" id="bsmx-grains-url" placeholder="">
-				</div>
-				<div class="form-group">
-					<label for="bsmx-hops-url">Hops</label>
-					<input type="url" class="form-control" id="bsmx-hops-url" placeholder="">
-				</div>
-				<div class="form-group">
-					<label for="bsmx-yeasts-url">Yeasts</label>
-					<input type="url" class="form-control" id="bsmx-yeasts-url" placeholder="">
-				</div>
-		      </div>
-		      <div class="modal-footer">
-		        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-		        <button id="btn-settings-save" type="button" class="btn btn-primary" data-dismiss="modal">Save</button>
-		      </div>
-		    </div><!-- /.modal-content -->
-		  </div><!-- /.modal-dialog -->
-		</div><!-- /.modal -->
-		`;
-
-/***/ },
-/* 44 */
-/***/ function(module, exports) {
-
-	
-	function MyAuth() {
-		this.firebase = {};
-		this.currentUser = {};
-		this.token = {};
-	};
-
-	MyAuth.prototype.init = function (firebase) {
-		this.firebase = firebase;
-
-		this.firebase.auth().onAuthStateChanged(firebaseUser => {
-			if (firebaseUser) {
-				console.log(firebaseUser);
-				this.currentUser = firebaseUser;
-			} else {
-				console.log('not logged in');
-				this.currentUser = {};
-			}
-		});
-
-	}
-
-	MyAuth.prototype.login = function () {
-		console.log('Log in started');
-
-		var firebase = this.firebase;
-		var provider = new this.firebase.auth.GoogleAuthProvider();
-		
-		this.firebase.auth().signInWithPopup(provider).then(this.UpdateProfile.bind(this)).catch(function(error) {
-		  // Handle Errors here.
-		  var errorCode = error.code;
-		  var errorMessage = error.message;
-		  // The email of the user's account used.
-		  var email = error.email;
-		  // The firebase.auth.AuthCredential type that was used.
-		  var credential = error.credential;
-		  
-		  console.log("Error in login");
-		  console.log(error);
-		});
-	}
-
-	MyAuth.prototype.logout = function () {
-		console.log('Log off started');
-		this.firebase.auth().signOut();
-	}
-
-	MyAuth.prototype.UpdateProfile = function (result) {
-		// This gives you a Google Access Token. You can use it to access the Google API.
-		this.token = result.credential.accessToken;
-		// The signed-in user info.
-		this.currentUser = result.user;
-
-		console.log('Updating user profile');
-		const dbRefObject = this.firebase.database().ref('users/' + this.currentUser.uid + '/');
-		dbRefObject.child('displayName').set(this.currentUser.displayName);
-	    dbRefObject.child('email').set(this.currentUser.email);
-	    dbRefObject.child('photoURL').set(this.currentUser.photoURL);
-	}
-
-	module.exports = new MyAuth();
-
-/***/ },
-/* 45 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(global, module) {/**
@@ -31530,10 +31159,10 @@
 	  }
 	}.call(this));
 
-	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(46)(module)))
+	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(36)(module)))
 
 /***/ },
-/* 46 */
+/* 36 */
 /***/ function(module, exports) {
 
 	module.exports = function(module) {
@@ -31549,10 +31178,627 @@
 
 
 /***/ },
-/* 47 */
+/* 37 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var xml2json = __webpack_require__(47);
+	__webpack_require__(49);
+
+	var Utils = function () {};
+
+	Utils.prototype.replaceAll = function (find, replace, str) {
+	  return str.replace(new RegExp(find, 'g'), replace);
+	};
+
+	Utils.prototype.htmlDecode = function (input){
+	  var e = document.createElement('textarea');
+	  e.innerHTML = input;
+	  var result = "";
+	  result = this.replaceAll("&"," &amp; ", e.value);
+	  result = this.replaceAll(" < "," &lt; ", result);
+	  result = this.replaceAll(" > "," &gt; ", result);
+	  result = this.replaceAll("","", result);
+
+	  return result;
+	};
+
+	Utils.prototype.parseXml = function (xmlStr) {
+	    xmlStr = this.htmlDecode(xmlStr);
+
+	    if (window.DOMParser) {
+	        return ( new window.DOMParser() ).parseFromString(xmlStr, "text/xml");
+	    } else if (typeof window.ActiveXObject != "undefined" && new window.ActiveXObject("Microsoft.XMLDOM")) {
+	        var xmlDoc = new window.ActiveXObject("Microsoft.XMLDOM");
+	        xmlDoc.async = "false";
+	        xmlDoc.loadXML(xmlStr);
+	        return xmlDoc;
+	    }
+	    return null;
+	};
+
+	Utils.prototype.loadXMLDoc = function (filename) {
+	    var xhttp;
+	    if (window.ActiveXObject)
+	    {
+	      xhttp = new ActiveXObject("Msxml2.XMLHTTP");
+	    } else {
+	      xhttp = new XMLHttpRequest();
+	    }
+	    xhttp.open("GET", filename, false);
+	    //try {xhttp.responseType = "msxml-document"} catch(err) {} // Helping IE11
+	    xhttp.send("");
+	    return this.parseXml(xhttp.responseText);
+	};
+
+	Utils.prototype.getCalc = function () {
+	  console.log("get Calc");
+
+	  var inside = document.getElementById("recipe-details").innerHTML;
+	  var results = inside.match(/!@#[^!]*!@#/gm);
+	  for (result in results) {
+	    var original = results[result];
+	    var script = original.replace(/!@#/g,"");
+	    eval(script);
+
+	    var color = 0;
+	    var og = 0;
+	    var fg = 0;
+	    
+	    var grains = calc.grains;
+	    //calc og
+	    // og += lbs * ppg * mash efficiency / volume
+	    // http://www.howtobrew.com/section2/chapter12-3.html
+	    for (key in grains) {
+	      og += ( (Math.round(grains[key]['weight']*10)/10) * (46 * (grains[key]['yield'])/100) * (grains[key]['ee']) / (Math.round(grains[key]['volume']*100)/100) );
+	      fg = grains[key]['fg'];
+	      }
+	    og = Math.round(og);
+	    inside = inside.replace("$$OG$$", "1." + ("00000"+og).substr(-3) + " SG");
+	    inside = inside.replace("$$FG$$", "1."+ ("0000"+Math.round(fg*1000)).substr(-3) +" SG"); //Math.round(fg*1000)/1000
+	    og = (og / 1000) + 1;
+	    inside = inside.replace("$$ABV$$", (Math.round((og-fg)*131.25*100) / 100) + "%");
+	    
+	    //round((F_R_DESIRED_OG - F_R_OG_SECONDARY)*131.25*100) div 100
+	    
+	    // calc color
+	    for (key in grains) {
+	      color += ( (Math.round(grains[key]['color'])) * (Math.round(grains[key]['weight']*10)/10) / (Math.round(grains[key]['volume']*100)/100) );
+	      }
+	      color = 1.4922 * (Math.pow(color,0.6859));
+	      inside = inside.replace("$$color$$", Math.round(color*10)/10+" SRM");
+	    
+	    var sparge = calc.sparge;
+	    if (sparge.type == 1) {
+	      var steps = [];
+	      var total_water = sparge.pre_boil_water;
+	      var grain_water_abs = sparge.grain_weight * 0.12;
+	      
+	      var max_mash_vol = sparge.mash_tun_vol * (sparge.percentage/100) - (0.19838 * sparge.grain_weight);
+	      var even_mash_step = even_mash_step = total_water / Math.ceil((total_water+grain_water_abs)/max_mash_vol);;
+	      
+	      if (sparge.drain == 1) {
+	        steps.push('Drain mash tun');
+	        total_water = total_water - sparge.mash_water + grain_water_abs;
+	        
+	        even_mash_step = total_water / Math.ceil(total_water/max_mash_vol);
+	      }
+	      else {
+	        if (sparge.even == 0) {
+	          steps.push( Math.round( ( Math.min(total_water, max_mash_vol) + grain_water_abs - sparge.mash_water ) * 100) / 100) ;
+	          total_water = sparge.pre_boil_water - ( Math.round( ( Math.min(total_water, max_mash_vol) + grain_water_abs - sparge.mash_water ) * 100) / 100) - sparge.mash_water + grain_water_abs;
+	        }
+	        else {
+	          steps.push(Math.round((even_mash_step + grain_water_abs - sparge.mash_water) * 100) / 100);
+	          total_water -= Math.round((even_mash_step + grain_water_abs - sparge.mash_water) * 100) / 100;
+	        }
+	      }
+	      
+	      for(var x = 0; x < Math.ceil(total_water/max_mash_vol); x++) {
+	        if (sparge.even == 0) {
+	          if (total_water < max_mash_vol) {
+	            steps.push(Math.round(total_water * 100) / 100);
+	            total_water -= Math.round(total_water * 100) / 100;
+	          }
+	          else {
+	            steps.push(Math.round(max_mash_vol * 100) / 100);
+	            total_water -= Math.round(max_mash_vol * 100) / 100;
+	          }
+	        }
+	        else {
+	          steps.push(Math.round(even_mash_step * 100) / 100);
+	          total_water -= Math.round(even_mash_step * 100) / 100;
+	        }
+	      }
+	      
+	      inside = inside.replace("$$batch-steps-no$$", JSON.stringify(steps.length));
+	      var steps_str = "";
+	      for (var s in steps) {
+	        steps_str += '<span class data-unit="imperial">'+steps[s]+' gal</span><span data-unit="metric">'+ (Math.round(steps[s] * 3.78541 * 10) / 10) +'L</span>, ';
+	      }
+	      inside = inside.replace("$$batch-steps-vols$$", steps_str.substring(0,steps_str.length-2));
+	      
+	      //inside = inside.replace("$$batch-steps-vols$$", JSON.stringify(steps));
+	    }
+	    
+	  }
+	  document.getElementById("recipe-details").innerHTML = inside;
+	}
+
+	module.exports = new Utils();
+
+/***/ },
+/* 38 */
+/***/ function(module, exports) {
+
+	
+	module.exports = function (firebaseUser) {
+	  return `
+	<ul class="nav navbar-nav">
+	  <li><a id="menu-recipe-link" href="#">Recipes</a></li>
+	  <li><a id="menu-ingredients-link" href="#">Ingredients</a></li>
+	</ul>
+	<ul class="nav navbar-nav navbar-right" id="navbar-menu-right">
+	  <li class="dropdown" id="user-info">
+	    <a href="#" id="user-info-pic" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+	      ${ firebaseUser.displayName } <span class="caret"></span>
+	    </a>
+	    <ul class="dropdown-menu">
+	      <li><a href="#" data-toggle="modal" data-target="#modal-settings">Settings</a></li>
+	      <li role="separator" class="divider"></li>
+	      <li><a id="btn-logout" href="#">Log out</a></li>
+	    </ul>
+	  </li>
+	</ul>
+	`;
+	};
+
+/***/ },
+/* 39 */
+/***/ function(module, exports) {
+
+	
+	module.exports = `
+	<ul class="nav navbar-nav">
+	  <li><a href="#">Getting Started</a></li>
+	</ul>
+	<ul class="nav navbar-nav navbar-right" id="navbar-menu-right">
+	  <li id="user-info"><a id="btn-login" href="#">Login</a></li>
+	</ul>
+
+	`;
+
+/***/ },
+/* 40 */
+/***/ function(module, exports) {
+
+	module.exports = `
+		 <div class="page-header"><h1>Getting Started</h1></div>
+		 <p>To get started please <em>login</em>.</p>
+		`;
+
+/***/ },
+/* 41 */
+/***/ function(module, exports) {
+
+	module.exports = "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\r\n<xsl:stylesheet version=\"1.0\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\">\r\n    <xsl:param name=\"path\" />\r\n\r\n    <xsl:template match=\"Data\">\r\n        <ul>\r\n            <xsl:apply-templates select=\"./Recipe\">\r\n                <xsl:sort select=\"F_R_NAME\" data-type=\"text\" order=\"ascending\" />\r\n            </xsl:apply-templates>\r\n        </ul>\r\n\r\n        <xsl:apply-templates select=\"./Table\">\r\n            <xsl:sort select=\"Name\" data-type=\"text\" order=\"ascending\" />\r\n        </xsl:apply-templates>\r\n    </xsl:template>\r\n\r\n    <xsl:template match=\"Table\">\r\n        <h3><xsl:value-of select=\"Name\"/></h3>\r\n        <ul>\r\n            <xsl:apply-templates select=\"./Data/Recipe\">\r\n                <xsl:sort select=\"F_R_NAME\" />\r\n            </xsl:apply-templates>\r\n        </ul>\r\n    </xsl:template>\r\n\r\n    <xsl:template match=\"Recipe\">\r\n        <xsl:if test=\"boolean(F_R_NAME)\">\r\n            <li>\r\n                <a>\r\n                    <xsl:attribute name=\"class\">recipe-detail-link</xsl:attribute>\r\n                    <xsl:attribute name=\"href\">#</xsl:attribute>\r\n                    <xsl:attribute name=\"data-folder\">\r\n                        <xsl:value-of select=\"../../Name\" />\r\n                    </xsl:attribute>\r\n                    <xsl:attribute name=\"data-recipe\">\r\n                        <xsl:call-template name=\"replace-string\">\r\n                          <xsl:with-param name=\"text\" select=\"F_R_NAME\"/>\r\n                          <xsl:with-param name=\"replace\" select=\"'%'\" />\r\n                          <xsl:with-param name=\"with\" select=\"'%25'\"/>\r\n                        </xsl:call-template>\r\n                    </xsl:attribute>\r\n                    \r\n                    <xsl:value-of select=\"F_R_NAME\" />\r\n                </a>\r\n            </li>\r\n        </xsl:if>\r\n\r\n        <xsl:apply-templates select=\"./Data\">\r\n            \r\n        </xsl:apply-templates>\r\n    </xsl:template>\r\n\t\r\n\t<xsl:template name=\"replace-string\">\r\n\t\t<xsl:param name=\"text\"/>\r\n\t\t<xsl:param name=\"replace\"/>\r\n\t\t<xsl:param name=\"with\"/>\r\n\t\t<xsl:choose>\r\n\t\t  <xsl:when test=\"contains($text,$replace)\">\r\n\t\t\t<xsl:value-of select=\"substring-before($text,$replace)\"/>\r\n\t\t\t<xsl:value-of select=\"$with\"/>\r\n\t\t\t<xsl:call-template name=\"replace-string\">\r\n\t\t\t  <xsl:with-param name=\"text\" select=\"substring-after($text,$replace)\"/>\r\n\t\t\t  <xsl:with-param name=\"replace\" select=\"$replace\"/>\r\n\t\t\t  <xsl:with-param name=\"with\" select=\"$with\"/>\r\n\t\t\t</xsl:call-template>\r\n\t\t  </xsl:when>\r\n\t\t  <xsl:otherwise>\r\n\t\t\t<xsl:value-of select=\"$text\"/>\r\n\t\t  </xsl:otherwise>\r\n\t\t</xsl:choose>\r\n  </xsl:template>\r\n</xsl:stylesheet>"
+
+/***/ },
+/* 42 */
+/***/ function(module, exports) {
+
+	
+	module.exports = `
+	<h1 class="page-header">Recipes</h1>
+	<div id="recipes"></div>
+	`;
+
+/***/ },
+/* 43 */
 /***/ function(module, exports) {
 
 	module.exports = "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\r\n<xsl:stylesheet version=\"1.0\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\">\r\n    <xsl:param name=\"folder\"/>\r\n    <xsl:param name=\"recipe\"/>\r\n    \r\n    <xsl:template match=\"/\">\r\n\r\n        <xsl:for-each select=\"//Recipe[boolean(./F_R_NAME) and ./F_R_NAME = $recipe and ../../Name = $folder]\">\r\n            <xsl:sort select=\"F_R_NAME\" />\r\n\r\n            <div class=\"recipe\">\r\n                <a class=\"anchor\">\r\n                    <xsl:attribute name=\"name\">\r\n                        <xsl:value-of select=\"F_R_NAME\" />\r\n                    </xsl:attribute>\r\n                </a>\r\n                <div class=\"page-header\">\r\n                    <h1>\r\n                        <xsl:value-of select=\"F_R_NAME\" />\r\n                    </h1>\r\n                </div>\r\n\t\t\t\t<div style=\"display:none\">\r\n\t\t\t\t\t!@#var calc = { 'grains' : [{ 'color' : 0, 'weight' : 0, 'volume' : <xsl:value-of select=\"./F_R_EQUIPMENT/F_E_BATCH_VOL*0.0078125\"/>, 'yield': 0, 'ee' : 0, 'fg': <xsl:value-of select=\"(F_R_STYLE/F_S_MAX_FG + F_R_STYLE/F_S_MIN_FG) div 2\" /> }<xsl:for-each select=\"./Ingredients/Data/Grain\">,{ 'color' : <xsl:value-of select=\"./F_G_COLOR\"/>, 'weight' : <xsl:value-of select=\"./F_G_AMOUNT*0.062500\"/>, 'volume' : <xsl:value-of select=\"./../../../F_R_EQUIPMENT/F_E_BATCH_VOL*0.0078125\"/>,'yield' : <xsl:value-of select=\"./F_G_YIELD\"/>, 'ee' : <xsl:choose><xsl:when test=\"F_G_TYPE = 0\"><xsl:value-of select=\"round(./../../../F_R_EQUIPMENT/F_E_EFFICIENCY*100) div 10000\" /></xsl:when><xsl:otherwise>1</xsl:otherwise></xsl:choose>, 'fg': <xsl:value-of select=\"(./../../../F_R_STYLE/F_S_MAX_FG + ./../../../F_R_STYLE/F_S_MIN_FG) div 2\" />}</xsl:for-each>],'sparge' : { 'type' : <xsl:value-of select=\"F_R_MASH/F_MH_BATCH\" />, 'percentage' : <xsl:value-of select=\"F_R_MASH/F_MH_BATCH_PCT\" />, 'even': <xsl:value-of select=\"F_R_MASH/F_MH_BATCH_EVEN\" />, 'drain' : <xsl:value-of select=\"F_R_MASH/F_MH_BATCH_DRAIN\" />, 'grain_weight' : <xsl:value-of select=\"format-number( round(F_R_MASH/F_MH_GRAIN_WEIGHT*0.062500*10) div 10, '##0.0' )\" />, 'mash_water' : 0 <xsl:for-each select=\"./F_R_MASH/steps/Data/MashStep\">+ <xsl:value-of select=\"format-number( round(F_MS_INFUSION*0.0078125*100) div 100, '##.00')\" /></xsl:for-each>, 'pre_boil_water' : <xsl:value-of select=\"format-number( round(F_R_EQUIPMENT/F_E_BOIL_VOL*0.0078125*100) div 100, '##.00')\" />, 'mash_tun_vol' : <xsl:value-of select=\"format-number( round(F_R_EQUIPMENT/F_E_MASH_VOL*0.0078125*100) div 100, '##.00')\" />  } } !@#\r\n\t\t\t\t</div>\r\n                <ul>\r\n                    <li>\r\n\t\t\t\t\t\tSize:\r\n\t\t\t\t\t\t<span data-unit=\"imperial\"><xsl:value-of select=\"round(F_R_EQUIPMENT/F_E_BATCH_VOL*0.0078125*100) div 100\" /> gal</span>\r\n\t\t\t\t\t\t<span data-unit=\"metric\"><xsl:value-of select=\"round(F_R_EQUIPMENT/F_E_BATCH_VOL*0.0295735*100) div 100\" /> L</span>\r\n\t\t\t\t\t</li>\r\n                    <li>Efficiency: <xsl:value-of select=\"round(F_R_EQUIPMENT/F_E_EFFICIENCY*100) div 100\" />%</li>\r\n                    <li>\r\n                        OG: $$OG$$\r\n                        (<xsl:value-of select=\"format-number( round(F_R_STYLE/F_S_MIN_OG*1000) div 1000, '##0.000' )\" /> - <xsl:value-of select=\"format-number( round(F_R_STYLE/F_S_MAX_OG*1000) div 1000, '##0.000' )\" />)\r\n                    </li>\r\n                    <li>\r\n                        FG: $$FG$$\r\n                        (<xsl:value-of select=\"format-number( round(F_R_STYLE/F_S_MIN_FG*1000) div 1000, '##0.000' )\" /> - <xsl:value-of select=\"format-number( round(F_R_STYLE/F_S_MAX_FG*1000) div 1000, '##0.000' )\" />)\r\n                    </li>\r\n                    <li>\r\n                        Color: $$color$$\r\n                        (<xsl:value-of select=\"round(F_R_STYLE/F_S_MIN_COLOR*100) div 100\" /> - <xsl:value-of select=\"round(F_R_STYLE/F_S_MAX_COLOR*100) div 100\" />)\r\n                    </li>\r\n                    <li>\r\n                        Alcohol: $$ABV$$ \r\n                        (<xsl:value-of select=\"round(F_R_STYLE/F_S_MIN_ABV*100) div 100\" /> - <xsl:value-of select=\"round(F_R_STYLE/F_S_MAX_ABV*100) div 100\" />)\r\n                    </li>\r\n                    <li>\r\n                        Bitterness: <xsl:value-of select=\"round(sum(./Ingredients/Data/Hops/F_H_IBU_CONTRIB)*10) div 10\" /> IBU\r\n                        (<xsl:value-of select=\"round(F_R_STYLE/F_S_MIN_IBU*10) div 10\" /> - <xsl:value-of select=\"round(F_R_STYLE/F_S_MAX_IBU*10) div 10\" />)\r\n                    </li>\r\n                    <li>Last modified: <xsl:value-of select=\"_MOD_\" /></li>\r\n                </ul>\r\n                <xsl:apply-templates select=\"./Ingredients\" />\r\n                <xsl:apply-templates select=\"./F_R_MASH\" />\r\n\t\t\t\t<xsl:apply-templates select=\"./F_R_NOTES\" />\r\n                <xsl:apply-templates select=\"./F_R_STYLE\" />\r\n            </div>\r\n            <hr />\r\n        </xsl:for-each>\r\n    </xsl:template>\r\n\t\r\n    <xsl:template match=\"F_R_MASH\">\r\n        <h3>Steps</h3>\r\n        <table id=\"steps\" class=\"table\">\r\n            <thead>\r\n                <tr>\r\n                    <th>Name</th>\r\n                    <th>Type</th>\r\n                    <th>Description</th>\r\n                    <th>Step Temperature</th>\r\n                    <th>Step Time</th>\r\n                </tr>\r\n            </thead>\r\n            <tbody>\r\n                <xsl:apply-templates select=\"./steps/Data/*\" />\r\n            </tbody>\r\n        </table>\r\n\r\n        <xsl:choose>\r\n\t\t\t<xsl:when test=\"F_MH_BATCH = 1\">\r\n\t\t\t\t<p>\r\n\t\t\t\t\tBatch sparge with $$batch-steps-no$$ steps ($$batch-steps-vols$$) of \r\n\t\t\t\t\t<span data-unit=\"imperial\"><xsl:value-of select=\"format-number( round(F_MH_SPARGE_TEMP*10) div 10, '##.0')\" /> F</span> \r\n\t\t\t\t\t<span data-unit=\"metric\"><xsl:value-of select=\"format-number( round(((F_MH_SPARGE_TEMP - 32) * 5 div 9)*10) div 10, '##.0')\" /> C</span>\r\n\t\t\t\t\twater.\r\n\t\t\t\t\tBoil for <xsl:value-of select=\"round(../F_R_EQUIPMENT/F_E_BOIL_TIME*100) div 100\" /> min.\r\n\t\t\t\t</p>\r\n\t\t\t</xsl:when>\r\n\t\t\t<xsl:otherwise>\r\n\t\t\t\t\r\n\t\t\t\t<p>\r\n\t\t\t\t\tSparge until you hit a pre boil volume of \r\n\t\t\t\t\t<span data-unit=\"imperial\"><xsl:value-of select=\"format-number( round(../F_R_EQUIPMENT/F_E_BOIL_VOL*0.0078125*100) div 100, '##.00')\" /> gal.</span>\r\n\t\t\t\t\t<span data-unit=\"metric\"><xsl:value-of select=\"format-number( round(../F_R_EQUIPMENT/F_E_BOIL_VOL*0.0295735*100) div 100, '##.00')\" /> L.</span>\r\n\t\t\t\t\tBoil for <xsl:value-of select=\"round(../F_R_EQUIPMENT/F_E_BOIL_TIME*100) div 100\" /> min.\r\n\t\t\t\t</p>\r\n\t\t\t</xsl:otherwise>\r\n\t\t</xsl:choose>\r\n    </xsl:template>\r\n\t\r\n\t<xsl:template match=\"F_R_NOTES\">\r\n\t\t<xsl:if test=\". != ''\">\r\n\t\t\t<h3>Notes</h3>\r\n\t\t\t<p class=\"recipe-notes note\">\r\n\t\t\t\t<xsl:value-of select=\".\" />\r\n\t\t\t</p>\r\n\t\t</xsl:if>\r\n    </xsl:template>\r\n\r\n    <xsl:template match=\"F_R_STYLE\">\r\n        <h3>Style</h3>\r\n        <div class=\"bjcp-style\">\r\n\t\t\t<div class=\"bjcp-style-title\">\r\n\t\t\t\t<strong><xsl:value-of select=\"F_S_NAME\" /> (<xsl:value-of select=\"F_S_GUIDE\" />&#160;&#160;<xsl:value-of select=\"F_S_NUMBER\" /><xsl:value-of select=\"substring('ABCDEFGHIJKLMNOPQRSTUVWXYZ',number(F_S_LETTER),1)\" />)</strong>\r\n\t\t\t</div>\r\n\t\t\t<p class=\"bjcp-style-notes note\"><xsl:value-of select=\"F_S_PROFILE\" /></p>\r\n\t\t</div>        \r\n    </xsl:template>\r\n\t\r\n    <xsl:template match=\"MashStep\">\r\n        <tr>\r\n            <td><xsl:value-of select=\"F_MS_NAME\" /></td>\r\n            <td>\r\n                <xsl:choose>\r\n                  <xsl:when test=\"F_MS_TYPE = 0\">\r\n                    Infusion\r\n                  </xsl:when>\r\n                  <xsl:when test=\"F_MS_TYPE = 1\">\r\n                    Decoction\r\n                  </xsl:when>\r\n                  <xsl:when test=\"F_MS_TYPE = 2\">\r\n                    Temperature\r\n                  </xsl:when>\r\n                  <xsl:otherwise></xsl:otherwise>\r\n                </xsl:choose>\r\n            </td>\r\n            <td>\r\n                <xsl:choose>\r\n                    <xsl:when test=\"F_MS_TYPE = 0\">\r\n                        <xsl:choose>\r\n                            <xsl:when test=\"F_MS_INFUSION != 0\">\r\n                                Add \r\n\t\t\t\t\t\t\t\t<span data-unit=\"imperial\"><xsl:value-of select=\"format-number( round(F_MS_INFUSION*0.0078125*100) div 100, '##.00')\" /> gal</span>\r\n\t\t\t\t\t\t\t\t<span data-unit=\"metric\"><xsl:value-of select=\"format-number( round(F_MS_INFUSION*0.0295735*100) div 100, '##.00')\" /> L</span>\r\n                            </xsl:when>\r\n                            <xsl:otherwise>\r\n                                Heat\r\n                            </xsl:otherwise>\r\n                        </xsl:choose>\r\n                         to \r\n\t\t\t\t\t\t <span data-unit=\"imperial\"><xsl:value-of select=\"format-number( round(F_MS_INFUSION_TEMP*10) div 10, '##.0')\" /> F</span>\r\n\t\t\t\t\t\t <span data-unit=\"metric\"><xsl:value-of select=\"format-number( round(((F_MS_INFUSION_TEMP - 32) * 5 div 9)*10) div 10, '##.0')\" /> C</span>\r\n                    </xsl:when>\r\n                    <xsl:when test=\"F_MS_TYPE = 1\">-</xsl:when>\r\n                    <xsl:when test=\"F_MS_TYPE = 2\">\r\n                        <xsl:choose>\r\n                            <xsl:when test=\"F_MS_INFUSION != 0\">\r\n                                Add \r\n\t\t\t\t\t\t\t\t<span data-unit=\"imperial\"><xsl:value-of select=\"format-number( round(F_MS_INFUSION*0.0078125*100) div 100, '##.00')\" /> gal</span>\r\n\t\t\t\t\t\t\t\t<span data-unit=\"metric\"><xsl:value-of select=\"format-number( round(F_MS_INFUSION*0.0295735*100) div 100, '##.00')\" /> L</span>\r\n                            </xsl:when>\r\n                            <xsl:otherwise>\r\n                                Heat\r\n                            </xsl:otherwise>\r\n                        </xsl:choose>\r\n                         to \r\n\t\t\t\t\t\t <span data-unit=\"imperial\"><xsl:value-of select=\"format-number( round(F_MS_INFUSION_TEMP*10) div 10, '##.0')\" /> F</span>\r\n\t\t\t\t\t\t <span data-unit=\"metric\"><xsl:value-of select=\"format-number( round(((F_MS_INFUSION_TEMP - 32) * 5 div 9)*10) div 10, '##.0')\" /> C</span>\r\n                    </xsl:when>\r\n                    <xsl:otherwise>\r\n\r\n                    </xsl:otherwise>\r\n                </xsl:choose>\r\n            </td>\r\n            <td>\r\n\t\t\t\t<span data-unit=\"imperial\"><xsl:value-of select=\"format-number( round(F_MS_STEP_TEMP*10) div 10, '##.0')\" /> F</span>\r\n\t\t\t\t<span data-unit=\"metric\"><xsl:value-of select=\"format-number( round(((F_MS_STEP_TEMP - 32) * 5 div 9)*10) div 10, '##.0')\" /> C</span>\r\n\t\t\t</td>\r\n            <td><xsl:value-of select=\"round(F_MS_STEP_TIME*100) div 100\" /> min</td>\r\n            \r\n        </tr>\r\n    </xsl:template>\r\n\t\r\n    <xsl:template match=\"Ingredients\">\r\n        <h3>Ingredients</h3>\r\n        <p class=\"ingredients\">\r\n            <table id=\"ingredients\" class=\"table\">\r\n                <thead>\r\n                    <tr>\r\n                        <th></th>\r\n                        <th>Amt</th>\r\n                        <th>Name</th>\r\n                        <th>Type</th>\r\n                        <th>%/IBU</th>\r\n                    </tr>\r\n                </thead>\r\n                <tbody>\r\n                    <xsl:apply-templates select=\"./Data/*\">\r\n                        <xsl:sort select=\"F_ORDER\" data-type=\"number\" />\r\n                    </xsl:apply-templates>\r\n                </tbody>\r\n            </table>\r\n        </p>\r\n    </xsl:template>\r\n\t\r\n    <xsl:template match=\"Grain\">\r\n        <tr class=\"grain\">\r\n            <td><xsl:value-of select=\"F_ORDER\" /></td>\r\n            <td>\r\n\t\t\t\t<span data-unit=\"imperial\"><xsl:value-of select=\"format-number( round(F_G_AMOUNT*0.062500*10) div 10, '##0.0' )\" /> lb</span>\r\n\t\t\t\t<span data-unit=\"metric\"><xsl:value-of select=\"format-number( round(F_G_AMOUNT*0.0283495*100) div 100, '##0.00' )\" /> kg</span>\r\n\t\t\t</td>\r\n            <td><xsl:value-of select=\"F_G_NAME\" /> (<xsl:value-of select=\"round(F_G_COLOR)\" /> SRM)</td>\r\n            <td>Grain</td>\r\n            <td><xsl:value-of select=\"format-number( round(F_G_PERCENT*10) div 10, '##0.0')\" />%</td>\r\n        </tr>\r\n    </xsl:template>\r\n    <xsl:template match=\"Hops\">\r\n        <tr class=\"hop\">\r\n            <td><xsl:value-of select=\"F_ORDER\" /></td>\r\n            <td>\r\n\t\t\t\t<span data-unit=\"imperial\"><xsl:value-of select=\"format-number(round(F_H_AMOUNT*10) div 10, '##0.0')\" /> oz</span>\r\n\t\t\t\t<span data-unit=\"metric\"><xsl:value-of select=\"format-number(round(F_H_AMOUNT*28.3495*10) div 10, '##0.0')\" /> g</span>\r\n\t\t\t</td>\r\n            <td>\r\n                <xsl:value-of select=\"F_H_NAME\" /> [<xsl:value-of select=\"format-number( round(F_H_ALPHA*10) div 10, '##0.0' )\" /> %] -\r\n                <xsl:choose>\r\n                  <xsl:when test=\"F_H_USE = 0\">\r\n                    Boil <xsl:value-of select=\"round(F_H_BOIL_TIME*100) div 100\" /> min\r\n                  </xsl:when>\r\n                  <xsl:when test=\"F_H_USE = 1\">\r\n                    Dry hop <xsl:value-of select=\"round(F_H_DRY_HOP_TIME*100) div 100\" /> days\r\n                  </xsl:when>\r\n                  <xsl:when test=\"F_H_USE = 2\">\r\n                    Mash\r\n                  </xsl:when>\r\n                  <xsl:when test=\"F_H_USE = 3\">\r\n                    First Wort <xsl:value-of select=\"round(F_H_BOIL_TIME*100) div 100\" /> min\r\n                  </xsl:when>\r\n\t\t\t\t  <xsl:when test=\"F_H_USE = 4\">\r\n                    Steep/Whirlpool <xsl:value-of select=\"round(F_H_BOIL_TIME*100) div 100\" /> min\r\n                  </xsl:when>\r\n                  <xsl:otherwise>\r\n                    \r\n                  </xsl:otherwise>\r\n                </xsl:choose>\r\n            </td>\r\n            <td>Hop</td>\r\n            <td><xsl:value-of select=\"format-number( round(F_H_IBU_CONTRIB*10) div 10, '###0.0')\" /> IBU</td>\r\n        </tr>\r\n    </xsl:template>\r\n    <xsl:template match=\"Yeast\">\r\n        <tr class=\"yeast\">\r\n            <td><xsl:value-of select=\"F_ORDER\" /></td>\r\n            <td><xsl:value-of select=\"format-number( round(F_Y_AMOUNT*10) div 10, '##0.0' )\" /> Items</td>\r\n            <td><xsl:value-of select=\"F_Y_LAB\" />&#160;<xsl:value-of select=\"F_Y_NAME\" />&#160;(<xsl:value-of select=\"F_Y_PRODUCT_ID\" />) </td>\r\n            <td>Yeast</td>\r\n            <td>-</td>\r\n        </tr>\r\n    </xsl:template>\r\n    <xsl:template match=\"Misc\">\r\n        <tr class=\"misc\">\r\n            <td><xsl:value-of select=\"F_ORDER\" /></td>\r\n            <td>\r\n\t\t\t\t<xsl:choose>\r\n\t\t\t\t\t<xsl:when test=\"F_M_UNITS = 0\">\r\n\t\t\t\t\t\t<span data-unit=\"imperial\"><xsl:value-of select=\"format-number(round(F_H_AMOUNT*0.000035274*10000) div 10000, '##0.0000')\" /> oz</span>\r\n\t\t\t\t\t\t<span data-unit=\"metric\"><xsl:value-of select=\"format-number(round(F_M_AMOUNT*100) div 100, '##0.00')\" />  mg</span>\r\n\t\t\t\t\t</xsl:when>\r\n\t\t\t\t\t<xsl:when test=\"F_M_UNITS = 1\">\r\n\t\t\t\t\t\t<span data-unit=\"imperial\"><xsl:value-of select=\"format-number(round(F_H_AMOUNT*0.035274*100) div 100, '##0.00')\" /> oz</span>\r\n\t\t\t\t\t\t<span data-unit=\"metric\"><xsl:value-of select=\"format-number(round(F_M_AMOUNT*100) div 100, '##0.00')\" />  g</span>\r\n\t\t\t\t\t</xsl:when>\r\n\t\t\t\t\t<xsl:when test=\"F_M_UNITS = 2\">\r\n\t\t\t\t\t\t<span data-unit=\"imperial\"><xsl:value-of select=\"format-number(round(F_M_AMOUNT*100) div 100, '##0.00')\" />  oz</span>\r\n\t\t\t\t\t\t<span data-unit=\"metric\"><xsl:value-of select=\"format-number(round(F_M_AMOUNT*28.3495*10) div 10, '##0.0')\" />  g</span>\r\n\t\t\t\t\t</xsl:when>\r\n\t\t\t\t\t<xsl:when test=\"F_M_UNITS = 3\">\r\n\t\t\t\t\t\t<span data-unit=\"imperial\"><xsl:value-of select=\"format-number(round(F_M_AMOUNT*100) div 100, '##0.00')\" />  lb</span>\r\n\t\t\t\t\t\t<span data-unit=\"metric\"><xsl:value-of select=\"format-number(round(F_M_AMOUNT*0.453592*100) div 100, '##0.00')\" />  kg</span>\r\n\t\t\t\t\t</xsl:when>\r\n\t\t\t\t\t<xsl:when test=\"F_M_UNITS = 4\">\r\n\t\t\t\t\t\t<span data-unit=\"imperial\"><xsl:value-of select=\"format-number(round(F_M_AMOUNT*2.20462*100) div 100, '##0.00')\" />  lb</span>\r\n\t\t\t\t\t\t<span data-unit=\"metric\"><xsl:value-of select=\"format-number(round(F_M_AMOUNT*100) div 100, '##0.00')\" />  kg</span>\r\n\t\t\t\t\t</xsl:when>\r\n\t\t\t\t\t<xsl:when test=\"F_M_UNITS = 5\">\r\n\t\t\t\t\t\t<span data-unit=\"imperial\"><xsl:value-of select=\"format-number(round(F_M_AMOUNT*0.033814*1000) div 1000, '##0.000')\" />  oz</span>\r\n\t\t\t\t\t\t<span data-unit=\"metric\"><xsl:value-of select=\"format-number(round(F_M_AMOUNT*100) div 100, '##0.00')\" />  ml</span>\r\n\t\t\t\t\t</xsl:when>\r\n\t\t\t\t\t<xsl:when test=\"F_M_UNITS = 6\"><xsl:value-of select=\"format-number(round(F_M_AMOUNT*100) div 100, '##0.00')\" />  tsp</xsl:when>\r\n\t\t\t\t\t<xsl:when test=\"F_M_UNITS = 7\"><xsl:value-of select=\"format-number(round(F_M_AMOUNT*100) div 100, '##0.00')\" />  tbsp</xsl:when>\r\n\t\t\t\t\t<xsl:when test=\"F_M_UNITS = 8\"><xsl:value-of select=\"format-number(round(F_M_AMOUNT*100) div 100, '##0.00')\" />  Cup</xsl:when>\r\n\t\t\t\t\t<xsl:when test=\"F_M_UNITS = 9\">\r\n\t\t\t\t\t\t<span data-unit=\"imperial\"><xsl:value-of select=\"format-number(round(F_M_AMOUNT*100) div 100, '##0.00')\" />  pt</span>\r\n\t\t\t\t\t\t<span data-unit=\"metric\"><xsl:value-of select=\"round(F_M_AMOUNT*473.18)\" />  ml</span>\r\n\t\t\t\t\t</xsl:when>\r\n\t\t\t\t\t<xsl:when test=\"F_M_UNITS = 10\">\r\n\t\t\t\t\t\t<span data-unit=\"imperial\"><xsl:value-of select=\"format-number(round(F_M_AMOUNT*100) div 100, '##0.00')\" />  qt</span>\r\n\t\t\t\t\t\t<span data-unit=\"metric\"><xsl:value-of select=\"format-number(round(F_M_AMOUNT*0.946353*100) div 100, '##0.00')\" />  l</span>\r\n\t\t\t\t\t</xsl:when>\r\n\t\t\t\t\t<xsl:when test=\"F_M_UNITS = 11\">\r\n\t\t\t\t\t\t<span data-unit=\"imperial\"><xsl:value-of select=\"format-number(round(F_M_AMOUNT*1.05669*100) div 100, '##0.00')\" />  qt</span>\r\n\t\t\t\t\t\t<span data-unit=\"metric\"><xsl:value-of select=\"format-number(round(F_M_AMOUNT*100) div 100, '##0.00')\" />  l</span>\r\n\t\t\t\t\t</xsl:when>\r\n\t\t\t\t\t<xsl:when test=\"F_M_UNITS = 12\">\r\n\t\t\t\t\t\t<span data-unit=\"imperial\"><xsl:value-of select=\"format-number(round(F_M_AMOUNT*100) div 100, '##0.00')\" />  gal</span>\r\n\t\t\t\t\t\t<span data-unit=\"metric\"><xsl:value-of select=\"format-number(round(F_M_AMOUNT*3.78541*100) div 100, '##0.00')\" />  l</span>\r\n\t\t\t\t\t</xsl:when>\r\n\t\t\t\t\t<xsl:when test=\"F_M_UNITS = 14\"><xsl:value-of select=\"format-number(round(F_M_AMOUNT*100) div 100, '##0.0')\" />  Items</xsl:when>\r\n\t\t\t\t\t<xsl:otherwise><xsl:value-of select=\"format-number(round(F_M_AMOUNT*100) div 100, '##0.00')\" /> Items</xsl:otherwise>\r\n\t\t\t\t</xsl:choose>\r\n\t\t\t</td>\r\n            <td>\r\n                <xsl:value-of select=\"F_M_NAME\" /> - \r\n                <xsl:choose>\r\n                  <xsl:when test=\"F_M_USE = 0\">\r\n                    Boil <xsl:value-of select=\"round(F_M_TIME*100) div 100\" /> \r\n                    <xsl:choose>\r\n                        <xsl:when test=\"F_M_TIME_UNITS = 0\"> mins</xsl:when>\r\n                        <xsl:when test=\"F_M_TIME_UNITS = 1\"> hours</xsl:when>\r\n                        <xsl:when test=\"F_M_TIME_UNITS = 2\"> days</xsl:when>\r\n                        <xsl:when test=\"F_M_TIME_UNITS = 3\"> weeks</xsl:when>\r\n                        <xsl:otherwise></xsl:otherwise>\r\n                    </xsl:choose>\r\n                  </xsl:when>\r\n                  <xsl:when test=\"F_M_USE = 1\">\r\n                    Mash <xsl:value-of select=\"round(F_M_TIME*100) div 100\" />\r\n                    <xsl:choose>\r\n                        <xsl:when test=\"F_M_TIME_UNITS = 0\"> mins</xsl:when>\r\n                        <xsl:when test=\"F_M_TIME_UNITS = 1\"> hours</xsl:when>\r\n                        <xsl:when test=\"F_M_TIME_UNITS = 2\"> days</xsl:when>\r\n                        <xsl:when test=\"F_M_TIME_UNITS = 3\"> weeks</xsl:when>\r\n                        <xsl:otherwise></xsl:otherwise>\r\n                    </xsl:choose>\r\n                  </xsl:when>\r\n                  <xsl:when test=\"F_M_USE = 2\">\r\n                    Primary <xsl:value-of select=\"round(F_M_TIME*100) div 100\" />\r\n                    <xsl:choose>\r\n                        <xsl:when test=\"F_M_TIME_UNITS = 0\"> mins</xsl:when>\r\n                        <xsl:when test=\"F_M_TIME_UNITS = 1\"> hours</xsl:when>\r\n                        <xsl:when test=\"F_M_TIME_UNITS = 2\"> days</xsl:when>\r\n                        <xsl:when test=\"F_M_TIME_UNITS = 3\"> weeks</xsl:when>\r\n                        <xsl:otherwise></xsl:otherwise>\r\n                    </xsl:choose>\r\n                  </xsl:when>\r\n                  <xsl:when test=\"F_M_USE = 3\">\r\n                    Secondary <xsl:value-of select=\"round(F_M_TIME*100) div 100\" />\r\n                    <xsl:choose>\r\n                        <xsl:when test=\"F_M_TIME_UNITS = 0\"> mins</xsl:when>\r\n                        <xsl:when test=\"F_M_TIME_UNITS = 1\"> hours</xsl:when>\r\n                        <xsl:when test=\"F_M_TIME_UNITS = 2\"> days</xsl:when>\r\n                        <xsl:when test=\"F_M_TIME_UNITS = 3\"> weeks</xsl:when>\r\n                        <xsl:otherwise></xsl:otherwise>\r\n                    </xsl:choose>\r\n                  </xsl:when>\r\n                  <xsl:when test=\"F_M_USE = 4\">\r\n                    Bottling <xsl:value-of select=\"round(F_M_TIME*100) div 100\" />\r\n                    <xsl:choose>\r\n                        <xsl:when test=\"F_M_TIME_UNITS = 0\"> mins</xsl:when>\r\n                        <xsl:when test=\"F_M_TIME_UNITS = 1\"> hours</xsl:when>\r\n                        <xsl:when test=\"F_M_TIME_UNITS = 2\"> days</xsl:when>\r\n                        <xsl:when test=\"F_M_TIME_UNITS = 3\"> weeks</xsl:when>\r\n                        <xsl:otherwise></xsl:otherwise>\r\n                    </xsl:choose>\r\n                  </xsl:when>\r\n                  <xsl:otherwise></xsl:otherwise>\r\n                </xsl:choose>\r\n            </td>\r\n            <td>\r\n                <xsl:choose>\r\n                  <xsl:when test=\"F_M_TYPE = 0\">Spice</xsl:when>\r\n                  <xsl:when test=\"F_M_TYPE = 1\">Fining</xsl:when>\r\n                  <xsl:when test=\"F_M_TYPE = 2\">Herb</xsl:when>\r\n                  <xsl:when test=\"F_M_TYPE = 3\">Flavor</xsl:when>\r\n                  <xsl:when test=\"F_M_TYPE = 4\">Other</xsl:when>\r\n                  <xsl:when test=\"F_M_TYPE = 5\">Water Agent</xsl:when>\r\n                  <xsl:otherwise></xsl:otherwise>\r\n                </xsl:choose>\r\n            </td>\r\n            <td>-</td>\r\n       </tr>\r\n    </xsl:template>\r\n\r\n\r\n\r\n    \r\n</xsl:stylesheet> \r\n"
+
+/***/ },
+/* 44 */
+/***/ function(module, exports) {
+
+	
+	module.exports = `
+	<div id="recipe-details">
+
+	</div>
+	`;
+
+/***/ },
+/* 45 */
+/***/ function(module, exports) {
+
+	module.exports = `
+		 <div class="modal fade" id="modal-settings" tabindex="-1" role="dialog">
+		  <div class="modal-dialog" role="document">
+		    <div class="modal-content">
+		      <div class="modal-header">
+		        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+		        <h4 class="modal-title">User Settings</h4>
+		      </div>
+		      <div class="modal-body">
+				<div class="form-group">
+					<label for="unit">Units</label>
+					<select id="unit" class="form-control">
+						<option value="metric">Metric</option>
+						<option value="imperial">Imperial (US)</option>
+					</select>
+				</div>			
+
+				<div class="form-group">
+					<label for="bsmx-recipes-url">Recipes</label>
+					<input type="url" class="form-control" id="bsmx-recipes-url" placeholder="">
+				</div>
+				<div class="form-group">
+					<label for="bsmx-grains-url">Grains</label>
+					<input type="url" class="form-control" id="bsmx-grains-url" placeholder="">
+				</div>
+				<div class="form-group">
+					<label for="bsmx-hops-url">Hops</label>
+					<input type="url" class="form-control" id="bsmx-hops-url" placeholder="">
+				</div>
+				<div class="form-group">
+					<label for="bsmx-yeasts-url">Yeasts</label>
+					<input type="url" class="form-control" id="bsmx-yeasts-url" placeholder="">
+				</div>
+		      </div>
+		      <div class="modal-footer">
+		        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+		        <button id="btn-settings-save" type="button" class="btn btn-primary" data-dismiss="modal">Save</button>
+		      </div>
+		    </div><!-- /.modal-content -->
+		  </div><!-- /.modal-dialog -->
+		</div><!-- /.modal -->
+		`;
+
+/***/ },
+/* 46 */
+/***/ function(module, exports) {
+
+	
+	function MyAuth() {
+		this.firebase = {};
+		this.currentUser = {};
+		this.token = {};
+	};
+
+	MyAuth.prototype.init = function (firebase) {
+		this.firebase = firebase;
+
+		this.firebase.auth().onAuthStateChanged(firebaseUser => {
+			if (firebaseUser) {
+				console.log(firebaseUser);
+				this.currentUser = firebaseUser;
+			} else {
+				console.log('not logged in');
+				this.currentUser = {};
+			}
+		});
+
+	}
+
+	MyAuth.prototype.login = function () {
+		console.log('Log in started');
+
+		var firebase = this.firebase;
+		var provider = new this.firebase.auth.GoogleAuthProvider();
+		
+		this.firebase.auth().signInWithPopup(provider).then(this.UpdateProfile.bind(this)).catch(function(error) {
+		  // Handle Errors here.
+		  var errorCode = error.code;
+		  var errorMessage = error.message;
+		  // The email of the user's account used.
+		  var email = error.email;
+		  // The firebase.auth.AuthCredential type that was used.
+		  var credential = error.credential;
+		  
+		  console.log("Error in login");
+		  console.log(error);
+		});
+	}
+
+	MyAuth.prototype.logout = function () {
+		console.log('Log off started');
+		this.firebase.auth().signOut();
+	}
+
+	MyAuth.prototype.UpdateProfile = function (result) {
+		// This gives you a Google Access Token. You can use it to access the Google API.
+		this.token = result.credential.accessToken;
+		// The signed-in user info.
+		this.currentUser = result.user;
+
+		console.log('Updating user profile');
+		const dbRefObject = this.firebase.database().ref('users/' + this.currentUser.uid + '/');
+		dbRefObject.child('displayName').set(this.currentUser.displayName);
+	    dbRefObject.child('email').set(this.currentUser.email);
+	    dbRefObject.child('photoURL').set(this.currentUser.photoURL);
+	}
+
+	module.exports = new MyAuth();
+
+/***/ },
+/* 47 */
+/***/ function(module, exports, __webpack_require__) {
+
+	
+	module.exports = __webpack_require__(48);
+
+
+/***/ },
+/* 48 */
+/***/ function(module, exports) {
+
+	/*
+	xml2json v 1.1
+	copyright 2005-2007 Thomas Frank
+
+	This program is free software under the terms of the 
+	GNU General Public License version 2 as published by the Free 
+	Software Foundation. It is distributed without any warranty.
+	*/
+
+	exports.parser = function (xmlcode, ignoretags, debug) {
+	    if (!ignoretags) { ignoretags = "" }    ;
+	    xmlcode = xmlcode.replace(/\s*\/>/g, '/>');
+	    xmlcode = xmlcode.replace(/<\?[^>]*>/g, "");
+	    var pat = /<!\[CDATA\[.*?\]\]>/g;
+	    var result = pat.exec(xmlcode);
+	    while (result) {
+	        xmlcode = xmlcode.replace(result[0], result[0].substring(9, result[0].lastIndexOf(']]>')));
+	        pat.lastIndex = 0;
+	        result = pat.exec(xmlcode);
+	    }
+	    xmlcode = xmlcode.replace(/<\![^>]*>/g, "");
+	    if (!ignoretags.sort) { ignoretags = ignoretags.split(",") }    ;
+	    var x = exports.no_fast_endings(xmlcode);
+	    x = exports.attris_to_tags(x);
+	    x = escape(x);
+	    x = x.split("%3C").join("<").split("%3E").join(">").split("%3D").join("=").split("%22").join("\"");
+	    for (var i = 0; i < ignoretags.length; i++) {
+	        x = x.replace(new RegExp("<" + ignoretags[i] + ">", "g"), "*$**" + ignoretags[i] + "**$*");
+	        x = x.replace(new RegExp("</" + ignoretags[i] + ">", "g"), "*$***" + ignoretags[i] + "**$*")
+	    }    ;
+	    x = '<JSONTAGWRAPPER>' + x + '</JSONTAGWRAPPER>';
+	    exports.xmlobject = {};
+	    var y = exports.xml_to_object(x).jsontagwrapper;
+	    if (debug) { y = exports.show_json_structure(y, debug) }    ;
+	    return y
+	}
+
+	exports.xml_to_object = function (xmlcode) {
+	    var x = xmlcode.replace(/<\//g, "�");
+	    x = x.split("<");
+	    var y = [];
+	    var level = 0;
+	    var opentags = [];
+	    for (var i = 1; i < x.length; i++) {
+	        var tagname = x[i].split(">")[0];
+	        opentags.push(tagname);
+	        level++
+	        y.push(level + "<" + x[i].split("�")[0]);
+	        var currentX = x[i];
+	        var tagString = "�" + opentags[opentags.length - 1] + ">";
+	        while (currentX.indexOf(tagString) >= 0) {
+	            level--;
+	            opentags.pop();
+	            var index = currentX.indexOf(tagString) + tagString.length;
+	            currentX = currentX.substring(index);
+	            tagString = "�" + opentags[opentags.length - 1] + ">";
+	        }
+	    }    ;
+	    var oldniva = -1;
+	    var objname = "exports.xmlobject";
+	    for (var i = 0; i < y.length; i++) {
+	        var preeval = "";
+	        var niva = parseInt(y[i].split("<")[0], 10);
+	        var tagnamn = y[i].split("<")[1].split(">")[0];
+	        tagnamn = tagnamn.toLowerCase();
+	        var rest = y[i].split(">")[1];
+	        if (niva <= oldniva) {
+	            var tabort = oldniva - niva + 1;
+	            for (var j = 0; j < tabort; j++) { objname = objname.substring(0, objname.lastIndexOf('["')) }
+	        }        ;
+	        objname += '["' + tagnamn + '"]';
+	        var pobject = objname.substring(0, objname.lastIndexOf("["));
+	        if (eval("typeof " + pobject) != "object") { preeval += pobject + "={value:" + pobject + "};\n" }        ;
+	        var objlast = objname.substring(objname.lastIndexOf('["') + 2, objname.length - 2);
+	        var already = false;
+	        for (k in eval(pobject)) { if (k == objlast) { already = true } }        ;
+	        var onlywhites = true;
+	        for (var s = 0; s < rest.length; s += 3) {
+	            if (rest.charAt(s) != "%") { onlywhites = false }
+	        }        ;
+	        var nextNiva = Number.MAX_VALUE;
+	        if (i + 1 < y.length) {
+	            nextNiva = parseInt(y[i + 1].split("<")[0], 10);
+	        }
+	        if (rest != "" && (!onlywhites || nextNiva <= niva)) {
+	            if (rest / 1 != rest) {
+	                rest = "'" + rest.replace(/\'/g, "\\'") + "'";
+	                rest = rest.replace(/\*\$\*\*\*/g, "</");
+	                rest = rest.replace(/\*\$\*\*/g, "<");
+	                rest = rest.replace(/\*\*\$\*/g, ">")
+	            }
+	        } 
+	        else { rest = "{}" }        ;
+	        if (rest.charAt(0) == "'") { rest = 'unescape(' + rest + ')' }        ;
+	        if (already && !eval(objname + ".sort")) { preeval += objname + "=[" + objname + "];\n" }        ;
+	        var before = "="; after = "";
+	        if (already) { before = ".push("; after = ")" }        ;
+	        var toeval = preeval + objname + before + rest + after;
+	        eval(toeval);
+	        if (eval(objname + ".sort")) { objname += "[" + eval(objname + ".length-1") + "]" }        ;
+	        oldniva = niva
+	    }    ;
+	    return exports.xmlobject
+	}
+
+	exports.show_json_structure = function (obj, debug, l) {
+	    var x = '';
+	    if (obj.sort) { x += "[\n" } else { x += "{\n" }    ;
+	    for (var i in obj) {
+	        if (!obj.sort) { x += '"' + i + '":' }        ;
+	        if (typeof obj[i] == "object") {
+	            x += exports.show_json_structure(obj[i], false, 1)
+	        }
+	        else {
+	            if (typeof obj[i] == "function") {
+	                var v = obj[i] + "";
+	                //v=v.replace(/\t/g,"");
+	                x += v
+	            }
+	            else if (typeof obj[i] != "string") { x += obj[i] + ",\n" }
+	            else { x += "'" + obj[i].replace(/\'/g, "\\'").replace(/\n/g, "\\n").replace(/\t/g, "\\t").replace(/\r/g, "\\r") + "',\n" }
+	        }
+	    }    ;
+	    if (obj.sort) { x += "],\n" } else { x += "},\n" }    ;
+	    if (!l) {
+	        x = x.substring(0, x.lastIndexOf(","));
+	        x = x.replace(new RegExp(",\n}", "g"), "\n}");
+	        x = x.replace(new RegExp(",\n]", "g"), "\n]");
+	        var y = x.split("\n"); x = "";
+	        var lvl = 0;
+	        for (var i = 0; i < y.length; i++) {
+	            if (y[i].indexOf("}") >= 0 || y[i].indexOf("]") >= 0) { lvl-- }            ;
+	            tabs = ""; for (var j = 0; j < lvl; j++) { tabs += "\t" }            ;
+	            x += tabs + y[i] + "\n";
+	            if (y[i].indexOf("{") >= 0 || y[i].indexOf("[") >= 0) { lvl++ }
+	        }        ;
+	        if (debug == "html") {
+	            x = x.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+	            x = x.replace(/\n/g, "<BR>").replace(/\t/g, "&nbsp;&nbsp;&nbsp;&nbsp;")
+	        }        ;
+	        if (debug == "compact") { x = x.replace(/\n/g, "").replace(/\t/g, "") }
+	    }    ;
+	    return x
+	}
+
+	exports.no_fast_endings = function (x) {
+	    x = x.split("/>");
+	    for (var i = 1; i < x.length; i++) {
+	        var t = x[i - 1].substring(x[i - 1].lastIndexOf("<") + 1).split(" ")[0];
+	        x[i] = "></" + t + ">" + x[i]
+	    }    ;
+	    x = x.join("");
+	    return x
+	}
+
+	exports.attris_to_tags = function (x) {
+	    var d = ' ="\''.split("");
+	    x = x.split(">");
+	    for (var i = 0; i < x.length; i++) {
+	        var temp = x[i].split("<");
+	        for (var r = 0; r < 4; r++) { temp[0] = temp[0].replace(new RegExp(d[r], "g"), "_jsonconvtemp" + r + "_") }        ;
+	        if (temp[1]) {
+	            temp[1] = temp[1].replace(/'/g, '"');
+	            temp[1] = temp[1].split('"');
+	            for (var j = 1; j < temp[1].length; j += 2) {
+	                for (var r = 0; r < 4; r++) { temp[1][j] = temp[1][j].replace(new RegExp(d[r], "g"), "_jsonconvtemp" + r + "_") }
+	            }            ;
+	            temp[1] = temp[1].join('"')
+	        }        ;
+	        x[i] = temp.join("<")
+	    }    ;
+	    x = x.join(">");
+	    x = x.replace(/ ([^=]*)=([^ |>]*)/g, "><$1>$2</$1");
+	    x = x.replace(/>"/g, ">").replace(/"</g, "<");
+	    for (var r = 0; r < 4; r++) { x = x.replace(new RegExp("_jsonconvtemp" + r + "_", "g"), d[r]) }    ;
+	    return x
+	}
+
+
+	if (!Array.prototype.push) {
+	    Array.prototype.push = function (x) {
+	        this[this.length] = x;
+	        return true
+	    }
+	};
+
+	if (!Array.prototype.pop) {
+	    Array.prototype.pop = function () {
+	        var response = this[this.length - 1];
+	        this.length--;
+	        return response
+	    }
+	};
+
+
+
+/***/ },
+/* 49 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// style-loader: Adds some css to the DOM by adding a <style> tag
+
+	// load the styles
+	var content = __webpack_require__(50);
+	if(typeof content === 'string') content = [[module.id, content, '']];
+	// add the styles to the DOM
+	var update = __webpack_require__(9)(content, {});
+	if(content.locals) module.exports = content.locals;
+	// Hot Module Replacement
+	if(false) {
+		// When the styles change, update the <style> tags
+		if(!content.locals) {
+			module.hot.accept("!!./../../css-loader/index.js!./toggle-switch.css", function() {
+				var newContent = require("!!./../../css-loader/index.js!./toggle-switch.css");
+				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+				update(newContent);
+			});
+		}
+		// When the module is disposed, remove the <style> tags
+		module.hot.dispose(function() { update(); });
+	}
+
+/***/ },
+/* 50 */
+/***/ function(module, exports, __webpack_require__) {
+
+	exports = module.exports = __webpack_require__(3)();
+	// imports
+
+
+	// module
+	exports.push([module.id, "@charset \"UTF-8\";\n/*\n* CSS TOGGLE SWITCH\n*\n* Ionuț Colceriu - ghinda.net\n* https://github.com/ghinda/css-toggle-switch\n*\n*/\n/* supported values are px, rem-calc, em-calc\n */\n/* imports\n */\n/* Functions\n */\n/* Shared\n */\n/* Hide by default\n */\n.switch-toggle a, .switch-light span span {\n  display: none; }\n\n/* We can't test for a specific feature,\n * so we only target browsers with support for media queries.\n */\n@media only screen {\n  /* Checkbox\n */\n  .switch-light {\n    position: relative;\n    display: block;\n    /* simulate default browser focus outlines on the switch,\n   * when the inputs are focused.\n   */ }\n    .switch-light::after {\n      clear: both;\n      content: \"\";\n      display: table; }\n    .switch-light *, .switch-light *:before, .switch-light *:after {\n      box-sizing: border-box; }\n    .switch-light a {\n      display: block;\n      -webkit-transition: all 0.2s ease-out;\n      -moz-transition: all 0.2s ease-out;\n      transition: all 0.2s ease-out; }\n    .switch-light label, .switch-light > span {\n      /* breathing room for bootstrap/foundation classes.\n     */\n      line-height: 2em;\n      vertical-align: middle; }\n    .switch-light input:focus ~ span a, .switch-light input:focus + label {\n      outline-width: 2px;\n      outline-style: solid;\n      outline-color: Highlight;\n      /* Chrome/Opera gets its native focus styles.\n     */ }\n      @media (-webkit-min-device-pixel-ratio: 0) {\n        .switch-light input:focus ~ span a, .switch-light input:focus + label {\n          outline-color: -webkit-focus-ring-color;\n          outline-style: auto; } }\n  /* don't hide the input from screen-readers and keyboard access\n */\n  .switch-light input {\n    position: absolute;\n    opacity: 0;\n    z-index: 3; }\n  .switch-light input:checked ~ span a {\n    right: 0%; }\n  /* inherit from label\n */\n  .switch-light strong {\n    font-weight: inherit; }\n  .switch-light > span {\n    position: relative;\n    overflow: hidden;\n    display: block;\n    min-height: 2em;\n    /* overwrite 3rd party classes padding\n   * eg. bootstrap .well\n   */\n    padding: 0;\n    text-align: left; }\n  .switch-light span span {\n    position: relative;\n    z-index: 2;\n    display: block;\n    float: left;\n    width: 50%;\n    text-align: center;\n    -webkit-user-select: none;\n    -moz-user-select: none;\n    -ms-user-select: none;\n    user-select: none; }\n  .switch-light a {\n    position: absolute;\n    right: 50%;\n    top: 0;\n    z-index: 1;\n    display: block;\n    width: 50%;\n    height: 100%;\n    padding: 0; }\n  /* Radio Switch\n */\n  .switch-toggle {\n    position: relative;\n    display: block;\n    /* simulate default browser focus outlines on the switch,\n   * when the inputs are focused.\n   */\n    /* For callout panels in foundation\n  */\n    padding: 0 !important;\n    /* 2 items\n   */\n    /* 3 items\n   */\n    /* 4 items\n   */\n    /* 5 items\n   */\n    /* 6 items\n   */ }\n    .switch-toggle::after {\n      clear: both;\n      content: \"\";\n      display: table; }\n    .switch-toggle *, .switch-toggle *:before, .switch-toggle *:after {\n      box-sizing: border-box; }\n    .switch-toggle a {\n      display: block;\n      -webkit-transition: all 0.2s ease-out;\n      -moz-transition: all 0.2s ease-out;\n      transition: all 0.2s ease-out; }\n    .switch-toggle label, .switch-toggle > span {\n      /* breathing room for bootstrap/foundation classes.\n     */\n      line-height: 2em;\n      vertical-align: middle; }\n    .switch-toggle input:focus ~ span a, .switch-toggle input:focus + label {\n      outline-width: 2px;\n      outline-style: solid;\n      outline-color: Highlight;\n      /* Chrome/Opera gets its native focus styles.\n     */ }\n      @media (-webkit-min-device-pixel-ratio: 0) {\n        .switch-toggle input:focus ~ span a, .switch-toggle input:focus + label {\n          outline-color: -webkit-focus-ring-color;\n          outline-style: auto; } }\n    .switch-toggle input {\n      position: absolute;\n      left: 0;\n      opacity: 0; }\n    .switch-toggle input + label {\n      position: relative;\n      z-index: 2;\n      display: block;\n      float: left;\n      padding: 0 0.5em;\n      margin: 0;\n      text-align: center; }\n    .switch-toggle a {\n      position: absolute;\n      top: 0;\n      left: 0;\n      padding: 0;\n      z-index: 1;\n      width: 10px;\n      height: 100%; }\n    .switch-toggle label:nth-child(2):nth-last-child(4), .switch-toggle label:nth-child(2):nth-last-child(4) ~ label, .switch-toggle label:nth-child(2):nth-last-child(4) ~ a {\n      width: 50%; }\n    .switch-toggle label:nth-child(2):nth-last-child(4) ~ input:checked:nth-child(3) + label ~ a {\n      left: 50%; }\n    .switch-toggle label:nth-child(2):nth-last-child(6), .switch-toggle label:nth-child(2):nth-last-child(6) ~ label, .switch-toggle label:nth-child(2):nth-last-child(6) ~ a {\n      width: 33.33%; }\n    .switch-toggle label:nth-child(2):nth-last-child(6) ~ input:checked:nth-child(3) + label ~ a {\n      left: 33.33%; }\n    .switch-toggle label:nth-child(2):nth-last-child(6) ~ input:checked:nth-child(5) + label ~ a {\n      left: 66.66%; }\n    .switch-toggle label:nth-child(2):nth-last-child(8), .switch-toggle label:nth-child(2):nth-last-child(8) ~ label, .switch-toggle label:nth-child(2):nth-last-child(8) ~ a {\n      width: 25%; }\n    .switch-toggle label:nth-child(2):nth-last-child(8) ~ input:checked:nth-child(3) + label ~ a {\n      left: 25%; }\n    .switch-toggle label:nth-child(2):nth-last-child(8) ~ input:checked:nth-child(5) + label ~ a {\n      left: 50%; }\n    .switch-toggle label:nth-child(2):nth-last-child(8) ~ input:checked:nth-child(7) + label ~ a {\n      left: 75%; }\n    .switch-toggle label:nth-child(2):nth-last-child(10), .switch-toggle label:nth-child(2):nth-last-child(10) ~ label, .switch-toggle label:nth-child(2):nth-last-child(10) ~ a {\n      width: 20%; }\n    .switch-toggle label:nth-child(2):nth-last-child(10) ~ input:checked:nth-child(3) + label ~ a {\n      left: 20%; }\n    .switch-toggle label:nth-child(2):nth-last-child(10) ~ input:checked:nth-child(5) + label ~ a {\n      left: 40%; }\n    .switch-toggle label:nth-child(2):nth-last-child(10) ~ input:checked:nth-child(7) + label ~ a {\n      left: 60%; }\n    .switch-toggle label:nth-child(2):nth-last-child(10) ~ input:checked:nth-child(9) + label ~ a {\n      left: 80%; }\n    .switch-toggle label:nth-child(2):nth-last-child(12), .switch-toggle label:nth-child(2):nth-last-child(12) ~ label, .switch-toggle label:nth-child(2):nth-last-child(12) ~ a {\n      width: 16.6%; }\n    .switch-toggle label:nth-child(2):nth-last-child(12) ~ input:checked:nth-child(3) + label ~ a {\n      left: 16.6%; }\n    .switch-toggle label:nth-child(2):nth-last-child(12) ~ input:checked:nth-child(5) + label ~ a {\n      left: 33.2%; }\n    .switch-toggle label:nth-child(2):nth-last-child(12) ~ input:checked:nth-child(7) + label ~ a {\n      left: 49.8%; }\n    .switch-toggle label:nth-child(2):nth-last-child(12) ~ input:checked:nth-child(9) + label ~ a {\n      left: 66.4%; }\n    .switch-toggle label:nth-child(2):nth-last-child(12) ~ input:checked:nth-child(11) + label ~ a {\n      left: 83%; }\n  /* Candy Theme\n * Based on the \"Sort Switches / Toggles (PSD)\" by Ormal Clarck\n * http://www.premiumpixels.com/freebies/sort-switches-toggles-psd/\n */\n  .switch-toggle.switch-candy, .switch-light.switch-candy > span {\n    background-color: #2d3035;\n    border-radius: 3px;\n    box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.3), 0 1px 0 rgba(255, 255, 255, 0.2); }\n  .switch-light.switch-candy span span, .switch-light.switch-candy input:checked ~ span span:first-child, .switch-toggle.switch-candy label {\n    color: #fff;\n    font-weight: bold;\n    text-align: center;\n    text-shadow: 1px 1px 1px #191b1e; }\n  .switch-light.switch-candy input ~ span span:first-child, .switch-light.switch-candy input:checked ~ span span:nth-child(2), .switch-candy input:checked + label {\n    color: #333;\n    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5); }\n  .switch-candy a {\n    border: 1px solid #333;\n    border-radius: 3px;\n    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.45);\n    background-color: #70c66b;\n    background-image: -webkit-linear-gradient(top, rgba(255, 255, 255, 0.2), transparent);\n    background-image: linear-gradient(to bottom, rgba(255, 255, 255, 0.2), transparent); }\n  .switch-candy-blue a {\n    background-color: #38a3d4; }\n  .switch-candy-yellow a {\n    background-color: #f5e560; }\n  /* iOS Theme\n*/\n  .switch-ios.switch-light span span {\n    color: #888b92; }\n  .switch-ios.switch-light a {\n    left: 0;\n    top: 0;\n    width: 2em;\n    height: 2em;\n    background-color: #fff;\n    border-radius: 100%;\n    border: 0.25em solid #D8D9DB;\n    -webkit-transition: all .2s ease-out;\n    -moz-transition: all .2s ease-out;\n    transition: all .2s ease-out; }\n  .switch-ios.switch-light > span {\n    display: block;\n    width: 100%;\n    height: 2em;\n    background-color: #D8D9DB;\n    border-radius: 1.75em;\n    -webkit-transition: all .4s ease-out;\n    -moz-transition: all .4s ease-out;\n    transition: all .4s ease-out; }\n  .switch-ios.switch-light > span span {\n    position: absolute;\n    top: 0;\n    left: 0;\n    width: 100%;\n    opacity: 0;\n    line-height: 1.875em;\n    vertical-align: middle;\n    -webkit-transition: all .2s ease-out;\n    -moz-transition: all .2s ease-out;\n    transition: all .2s ease-out; }\n    .switch-ios.switch-light > span span:first-of-type {\n      opacity: 1;\n      padding-left: 1.875em; }\n    .switch-ios.switch-light > span span:last-of-type {\n      padding-right: 1.875em; }\n  .switch-ios.switch-light input:checked ~ span a {\n    left: 100%;\n    border-color: #4BD865;\n    margin-left: -2em; }\n  .switch-ios.switch-light input:checked ~ span {\n    border-color: #4BD865;\n    box-shadow: inset 0 0 0 30px #4BD865; }\n  .switch-ios.switch-light input:checked ~ span span:first-of-type {\n    opacity: 0; }\n  .switch-ios.switch-light input:checked ~ span span:last-of-type {\n    opacity: 1;\n    color: #fff; }\n  .switch-ios.switch-toggle {\n    background-color: #D8D9DB;\n    border-radius: 30px;\n    box-shadow: inset rgba(0, 0, 0, 0.1) 0 1px 0; }\n    .switch-ios.switch-toggle a {\n      background-color: #4BD865;\n      border: 0.125em solid #D8D9DB;\n      border-radius: 1.75em;\n      -webkit-transition: all 0.12s ease-out;\n      -moz-transition: all 0.12s ease-out;\n      transition: all 0.12s ease-out; }\n    .switch-ios.switch-toggle label {\n      height: 2.4em;\n      color: #888b92;\n      line-height: 2.4em;\n      vertical-align: middle; }\n  .switch-ios input:checked + label {\n    color: #3e4043; }\n  /* Holo Theme\n */\n  .switch-toggle.switch-holo, .switch-light.switch-holo > span {\n    background-color: #464747;\n    border-radius: 1px;\n    box-shadow: inset rgba(0, 0, 0, 0.1) 0 1px 0;\n    color: #fff;\n    text-transform: uppercase; }\n  .switch-holo label {\n    color: #fff; }\n  .switch-holo > span span {\n    opacity: 0;\n    -webkit-transition: all 0.1s;\n    -moz-transition: all 0.1s;\n    transition: all 0.1s; }\n    .switch-holo > span span:first-of-type {\n      opacity: 1; }\n  .switch-holo > span span, .switch-holo label {\n    font-size: 85%;\n    line-height: 2.15625em; }\n  .switch-holo a {\n    background-color: #666;\n    border-radius: 1px;\n    box-shadow: inset rgba(255, 255, 255, 0.2) 0 1px 0, inset rgba(0, 0, 0, 0.3) 0 -1px 0; }\n  /* Selected ON switch-light\n*/\n  .switch-holo.switch-light input:checked ~ span a {\n    background-color: #0E88B1; }\n  .switch-holo.switch-light input:checked ~ span span:first-of-type {\n    opacity: 0; }\n  .switch-holo.switch-light input:checked ~ span span:last-of-type {\n    opacity: 1; }\n  /* Material Theme\n */\n  /* switch-light\n */\n  .switch-light.switch-material a {\n    top: -0.1875em;\n    width: 1.75em;\n    height: 1.75em;\n    border-radius: 50%;\n    background: #fafafa;\n    box-shadow: 0 0.125em 0.125em 0 rgba(0, 0, 0, 0.14), 0 0.1875em 0.125em -0.125em rgba(0, 0, 0, 0.2), 0 0.125em 0.25em 0 rgba(0, 0, 0, 0.12);\n    -webkit-transition: right .28s cubic-bezier(.4, 0, .2, 1);\n    -moz-transition: right .28s cubic-bezier(.4, 0, .2, 1);\n    transition: right .28s cubic-bezier(.4, 0, .2, 1); }\n  .switch-material.switch-light {\n    overflow: visible; }\n    .switch-material.switch-light::after {\n      clear: both;\n      content: \"\";\n      display: table; }\n  .switch-material.switch-light > span {\n    overflow: visible;\n    position: relative;\n    top: 0.1875em;\n    width: 3.25em;\n    height: 1.5em;\n    min-height: auto;\n    border-radius: 1em;\n    background: rgba(0, 0, 0, 0.26); }\n  .switch-material.switch-light span span {\n    position: absolute;\n    clip: rect(0 0 0 0); }\n  .switch-material.switch-light input:checked ~ span a {\n    right: 0;\n    background: #3f51b5;\n    box-shadow: 0 0.1875em 0.25em 0 rgba(0, 0, 0, 0.14), 0 0.1875em 0.1875em -0.125em rgba(0, 0, 0, 0.2), 0 0.0625em 0.375em 0 rgba(0, 0, 0, 0.12); }\n  .switch-material.switch-light input:checked ~ span {\n    background: rgba(63, 81, 181, 0.5); }\n  /* switch-toggle\n */\n  .switch-toggle.switch-material {\n    overflow: visible; }\n    .switch-toggle.switch-material::after {\n      clear: both;\n      content: \"\";\n      display: table; }\n  .switch-toggle.switch-material a {\n    top: 48%;\n    width: 0.375em !important;\n    height: 0.375em;\n    margin-left: 0.25em;\n    background: #3f51b5;\n    border-radius: 100%;\n    -webkit-transform: translateY(-50%);\n    -moz-transform: translateY(-50%);\n    -ms-transform: translateY(-50%);\n    -o-transform: translateY(-50%);\n    transform: translateY(-50%);\n    -webkit-transition: -webkit-transform 0.4s ease-in;\n    -moz-transition: -moz-transform 0.4s ease-in;\n    transition: transform 0.4s ease-in; }\n  .switch-toggle.switch-material label {\n    color: rgba(0, 0, 0, 0.54);\n    font-size: 1em; }\n  .switch-toggle.switch-material label:before {\n    content: '';\n    position: absolute;\n    top: 48%;\n    left: 0;\n    display: block;\n    width: 0.875em;\n    height: 0.875em;\n    border-radius: 100%;\n    border: 0.125em solid rgba(0, 0, 0, 0.54);\n    -webkit-transform: translateY(-50%);\n    -moz-transform: translateY(-50%);\n    -ms-transform: translateY(-50%);\n    -o-transform: translateY(-50%);\n    transform: translateY(-50%); }\n  .switch-toggle.switch-material input:checked + label:before {\n    border-color: #3f51b5; }\n  /* ripple\n */\n  .switch-light.switch-material > span:before, .switch-light.switch-material > span:after, .switch-toggle.switch-material label:after {\n    content: '';\n    position: absolute;\n    top: 0;\n    left: 0;\n    z-index: 3;\n    display: block;\n    width: 4em;\n    height: 4em;\n    border-radius: 100%;\n    background: #3f51b5;\n    opacity: .4;\n    margin-left: -1.25em;\n    margin-top: -1.25em;\n    -webkit-transform: scale(0);\n    -moz-transform: scale(0);\n    -ms-transform: scale(0);\n    -o-transform: scale(0);\n    transform: scale(0);\n    -webkit-transition: opacity .4s ease-in;\n    -moz-transition: opacity .4s ease-in;\n    transition: opacity .4s ease-in; }\n  .switch-light.switch-material > span:after {\n    left: auto;\n    right: 0;\n    margin-left: 0;\n    margin-right: -1.25em; }\n  .switch-toggle.switch-material label:after {\n    width: 3.25em;\n    height: 3.25em;\n    margin-top: -0.75em; }\n  @-webkit-keyframes materialRipple {\n    0% {\n      -webkit-transform: scale(0); }\n\n    20% {\n      -webkit-transform: scale(1); }\n\n    100% {\n      opacity: 0;\n      -webkit-transform: scale(1); } }\n\n  @-moz-keyframes materialRipple {\n    0% {\n      -moz-transform: scale(0); }\n\n    20% {\n      -moz-transform: scale(1); }\n\n    100% {\n      opacity: 0;\n      -moz-transform: scale(1); } }\n\n  @keyframes materialRipple {\n    0% {\n      -webkit-transform: scale(0);\n      -moz-transform: scale(0);\n      -ms-transform: scale(0);\n      -o-transform: scale(0);\n      transform: scale(0); }\n\n    20% {\n      -webkit-transform: scale(1);\n      -moz-transform: scale(1);\n      -ms-transform: scale(1);\n      -o-transform: scale(1);\n      transform: scale(1); }\n\n    100% {\n      opacity: 0;\n      -webkit-transform: scale(1);\n      -moz-transform: scale(1);\n      -ms-transform: scale(1);\n      -o-transform: scale(1);\n      transform: scale(1); } }\n\n  .switch-material.switch-light input:not(:checked) ~ span:after, .switch-material.switch-light input:checked ~ span:before, .switch-toggle.switch-material input:checked + label:after {\n    -webkit-animation: materialRipple .4s ease-in;\n    -moz-animation: materialRipple .4s ease-in;\n    animation: materialRipple .4s ease-in; }\n  /* trick to prevent the default checked ripple animation from showing\n * when the page loads.\n * the ripples are hidden by default, and shown only when the input is focused.\n */\n  .switch-light.switch-material.switch-light input ~ span:before, .switch-light.switch-material.switch-light input ~ span:after, .switch-material.switch-toggle input + label:after {\n    visibility: hidden; }\n  .switch-light.switch-material.switch-light input:focus:checked ~ span:before, .switch-light.switch-material.switch-light input:focus:not(:checked) ~ span:after, .switch-material.switch-toggle input:focus:checked + label:after {\n    visibility: visible; } }\n\n/* Bugfix for older Webkit, including mobile Webkit. Adapted from\n * http://css-tricks.com/webkit-sibling-bug/\n */\n@media only screen and (-webkit-max-device-pixel-ratio: 2) and (max-device-width: 80em) {\n  .switch-light, .switch-toggle {\n    -webkit-animation: webkitSiblingBugfix infinite 1s; } }\n\n@-webkit-keyframes webkitSiblingBugfix {\n  from {\n    -webkit-transform: translate3d(0, 0, 0); }\n\n  to {\n    -webkit-transform: translate3d(0, 0, 0); } }\n\n/*# sourceMappingURL=toggle-switch.css.map */", ""]);
+
+	// exports
+
+
+/***/ },
+/* 51 */
+/***/ function(module, exports) {
+
+	
+	module.exports = `
+	<h1 class="page-header">Ingredients</h1>
+	<div id="ingredients">
+
+	</div>
+	`;
+
+/***/ },
+/* 52 */
+/***/ function(module, exports) {
+
+	module.exports = "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\r\n<xsl:stylesheet version=\"1.0\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\">\r\n\r\n    <xsl:template match=\"/\">\r\n        <h2>Grain</h2>\r\n        <table class=\"table\">\r\n            <thead>\r\n                <tr>\r\n                    <th>Name</th>\r\n                    <th>Origin</th>\r\n                    <th>Type</th>\r\n                    <th>Color</th>\r\n                    <th>Inventory</th>\r\n                    <th>Price</th>\r\n                </tr>\r\n            </thead>\r\n            <tbody>\r\n                <xsl:for-each select=\"//Grain[boolean(./F_G_NAME) and ./F_G_INVENTORY != 0.0000000]\">\r\n                    <xsl:sort select=\"./F_G_NAME\" />\r\n\r\n                    <tr>\r\n                        <td><xsl:value-of select=\"F_G_NAME\" /></td>\r\n                        <td><xsl:value-of select=\"F_G_ORIGIN\" /></td>\r\n                        <td>\r\n                            <xsl:choose>\r\n                                <xsl:when test=\"F_G_TYPE = 0\">Grain</xsl:when>\r\n                                <xsl:when test=\"F_G_TYPE = 1\">Extract</xsl:when>\r\n                                <xsl:when test=\"F_G_TYPE = 2\">Sugar</xsl:when>\r\n                                <xsl:when test=\"F_G_TYPE = 3\">Adjunct</xsl:when>\r\n                                <xsl:when test=\"F_G_TYPE = 4\">Dry Extract</xsl:when>\r\n                                <xsl:otherwise></xsl:otherwise>\r\n                            </xsl:choose>\r\n                        </td>\r\n                        <td><xsl:value-of select=\"format-number(round(F_G_COLOR*10) div 10, '##0.0')\" /> SRM</td>\r\n                        <td>\r\n\t\t\t\t\t\t\t<span data-unit=\"imperial\"><xsl:value-of select=\"format-number(round(F_G_INVENTORY*0.0625*100) div 100, '##0.00')\" /> lb</span>\r\n\t\t\t\t\t\t\t<span data-unit=\"metric\"><xsl:value-of select=\"format-number(round(F_G_INVENTORY*0.0283495*100) div 100, '##0.00')\" /> kg</span>\r\n\t\t\t\t\t\t</td>\r\n                        <td>\r\n\t\t\t\t\t\t\t\r\n\t\t\t\t\t\t\t<span data-unit=\"imperial\"><xsl:value-of select=\"format-number(round(F_G_PRICE*16*100) div 100, '##0.00')\" /> $/lb</span>\r\n\t\t\t\t\t\t\t<span data-unit=\"metric\"><xsl:value-of select=\"format-number(round(F_G_PRICE*35.274*100) div 100, '##0.00')\" /> $/kg</span>\r\n\t\t\t\t\t\t</td>\r\n                        \r\n                    </tr>\r\n                </xsl:for-each>\r\n            </tbody>\r\n        </table>\r\n    </xsl:template>\r\n</xsl:stylesheet>"
+
+/***/ },
+/* 53 */
+/***/ function(module, exports) {
+
+	module.exports = "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\r\n<xsl:stylesheet version=\"1.0\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\">\r\n\r\n    <xsl:template match=\"/\">\r\n        <h2>Hops</h2>\r\n        <table class=\"table\">\r\n            <thead>\r\n                <tr>\r\n                    <th>Name</th>\r\n                    <th>Alpha</th>\r\n                    <th>Type</th>\r\n                    <th>Form</th>\r\n                    <th>Inventory</th>\r\n                    <th>Price</th>\r\n                </tr>\r\n            </thead>\r\n            <tbody>\r\n                <xsl:for-each select=\"//Hops[boolean(./F_H_NAME) and ./F_H_INVENTORY != 0.0000000]\">\r\n                    <xsl:sort select=\"./F_H_NAME\" />\r\n\r\n                    <tr>\r\n                        <td><xsl:value-of select=\"F_H_NAME\" /></td>\r\n                        <td><xsl:value-of select=\"format-number(round(F_H_ALPHA*100) div 100, '##0.00')\" />%</td>\r\n                        <td>\r\n                            <xsl:choose>\r\n                                <xsl:when test=\"F_H_TYPE = 0\">Bittering</xsl:when>\r\n                                <xsl:when test=\"F_H_TYPE = 1\">Aroma</xsl:when>\r\n                                <xsl:when test=\"F_H_TYPE = 2\">Both</xsl:when>\r\n                                <xsl:otherwise></xsl:otherwise>\r\n                            </xsl:choose>\r\n                        </td>\r\n                        <td>\r\n                            <xsl:choose>\r\n                                <xsl:when test=\"F_H_FORM = 0\">Pellet</xsl:when>\r\n                                <xsl:when test=\"F_H_FORM = 1\">Plug</xsl:when>\r\n                                <xsl:when test=\"F_H_FORM = 2\">Leaf</xsl:when>\r\n                                <xsl:otherwise></xsl:otherwise>\r\n                            </xsl:choose>\r\n                        </td>\r\n                        <td>\r\n\t\t\t\t\t\t\t<span data-unit=\"imperial\"><xsl:value-of select=\"format-number(round(F_H_INVENTORY*10) div 10, '##0.0')\" /> oz</span>\r\n\t\t\t\t\t\t\t<span data-unit=\"metric\"><xsl:value-of select=\"format-number(round(F_H_INVENTORY*28.3495*10) div 10, '##0.0')\" /> g</span>\r\n\t\t\t\t\t\t</td>\r\n                        <td>\r\n\t\t\t\t\t\t\t<span data-unit=\"imperial\"><xsl:value-of select=\"format-number(round(F_H_PRICE*100) div 100, '##0.00')\" /> $/oz</span>\r\n\t\t\t\t\t\t\t<span data-unit=\"metric\"><xsl:value-of select=\"format-number(round(F_H_PRICE div 2.83495 * 100) div 100, '##0.00')\" /> $/10g</span>\r\n\t\t\t\t\t\t</td>\r\n                    </tr>\r\n                </xsl:for-each>\r\n            </tbody>\r\n        </table>\r\n    </xsl:template>\r\n</xsl:stylesheet>"
+
+/***/ },
+/* 54 */
+/***/ function(module, exports) {
+
+	module.exports = "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\r\n<xsl:stylesheet version=\"1.0\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\">\r\n\r\n    <xsl:template match=\"/\">\r\n        <h2>Yeast</h2>\r\n        <table class=\"table\">\r\n            <thead>\r\n                <tr>\r\n                    <th>Name (Product ID)</th>\r\n                    <th>Lab</th>\r\n                    <th>Type</th>\r\n                    <th>Form</th>\r\n                    <th>Inventory</th>\r\n                    <th>Price</th>\r\n                </tr>\r\n            </thead>\r\n            <tbody>\r\n                <xsl:for-each select=\"//Yeast[boolean(./F_Y_NAME) and ./F_Y_INVENTORY != 0.0000000]\">\r\n                    <xsl:sort select=\"./F_Y_NAME\" />\r\n\r\n                    <tr>\r\n                        <td><xsl:value-of select=\"F_Y_NAME\" /> (<xsl:value-of select=\"F_Y_PRODUCT_ID\" />)</td>\r\n                        <td><xsl:value-of select=\"F_Y_LAB\" /></td>\r\n                        <td>\r\n                            <xsl:choose>\r\n                                <xsl:when test=\"F_Y_TYPE = 0\">Ale</xsl:when>\r\n                                <xsl:when test=\"F_Y_TYPE = 1\">Lager</xsl:when>\r\n                                <xsl:when test=\"F_Y_TYPE = 2\">Wine</xsl:when>\r\n                                <xsl:when test=\"F_Y_TYPE = 3\">Champagne</xsl:when>\r\n                                <xsl:when test=\"F_Y_TYPE = 4\">Wheat</xsl:when>\r\n                                <xsl:otherwise></xsl:otherwise>\r\n                            </xsl:choose>\r\n                        </td>\r\n                        <td>\r\n                            <xsl:choose>\r\n                                <xsl:when test=\"F_Y_FORM = 0\">Liquid</xsl:when>\r\n                                <xsl:when test=\"F_Y_FORM = 1\">Dry</xsl:when>\r\n                                <xsl:when test=\"F_Y_FORM = 2\">Slant</xsl:when>\r\n                                <xsl:when test=\"F_Y_FORM = 3\">Culture</xsl:when>\r\n                                <xsl:otherwise></xsl:otherwise>\r\n                            </xsl:choose>\r\n                        </td>\r\n                        <td><xsl:value-of select=\"format-number(round(F_Y_INVENTORY*10) div 10, '##0.0')\" /> pkgs</td>\r\n                        <td><xsl:value-of select=\"format-number(round(F_Y_PRICE*100) div 100, '##0.00')\" /> $/pkg</td>\r\n                    </tr>\r\n                </xsl:for-each>\r\n            </tbody>\r\n        </table>\r\n    </xsl:template>\r\n</xsl:stylesheet>"
 
 /***/ }
 /******/ ]);

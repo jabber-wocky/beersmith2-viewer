@@ -22,7 +22,7 @@ Page.prototype.login = function (firebaseUser) {
   navbar.innerHTML = require('page-menu-login.jsx')(this.firebase.auth().currentUser);
   document.getElementById('btn-logout').addEventListener('click', this.myAuth.logout.bind(this.myAuth), false);
   document.getElementById('menu-recipe-link').addEventListener('click', this.recipes.bind(this), false);
-
+  document.getElementById('menu-ingredients-link').addEventListener('click', this.ingredients.bind(this), false);
   // load pages
   this.settingsModal();
   this.recipes();
@@ -72,7 +72,6 @@ Page.prototype.recipeDetail = function (folder, recipe) {
   if (this.data.recipes === '' || this.data.recipes === null)
     return;
 
-  this._clear();
   xsl = utils.parseXml(require("xsl/recipe-details.xsl"));
 
   xsltProcessor = new XSLTProcessor();
@@ -81,32 +80,82 @@ Page.prototype.recipeDetail = function (folder, recipe) {
   xsltProcessor.setParameter(null, "recipe", recipe);
   resultDocument = xsltProcessor.transformToFragment(this.data.recipes, document);
   
-  console.log(resultDocument);
-  document.getElementById("content").appendChild(resultDocument);
-    
-  /*  
-    $(".note").each(function () {
-      $(this).html($(this).html().replace(/\n/g,"<br />"));
-    });
+  this._showHtmlString(require("page-recipe-details.jsx"));
+  document.getElementById('recipe-details').appendChild(resultDocument);
 
-    getCalc();
-    
-    loadUnitToggle();
-    
-    $("#recipe-details").show();
-    */
+  utils.getCalc();  
+
+  this.refreshUnits();
+
+  document.querySelectorAll('.note').forEach(function (ele) {
+    var html = ele.innerHTML.replace(/\n/g,"<br />");
+    ele.innerHTML = html;
+  }, this);
+
 }
+
+Page.prototype.refreshUnits = function () {
+  document.querySelectorAll('[data-unit]').forEach(function(ele) {
+    if (ele.attributes['data-unit'].value === this.settings.unit) {
+      ele.classList.remove("hide");
+    } else {
+      ele.classList.add("hide");
+    }
+  }, this);
+}
+
+Page.prototype.ingredients = function () {
+  this._showHtmlString(require("page-ingredients.jsx"));
+  this.displayHops();
+  this.displayGrains();
+  this.displayYeasts();
+  this.refreshUnits();
+}
+
+Page.prototype.displayGrains = function () {
+  xsl = utils.parseXml(require("xsl/grains.xsl"));
+  xsltProcessor = new XSLTProcessor();
+  xsltProcessor.importStylesheet(xsl);
+  resultDocument = xsltProcessor.transformToFragment(this.data.grains, document);
+  document.getElementById("ingredients").appendChild(resultDocument);
+}
+
+Page.prototype.displayHops = function () {
+  xsl = utils.parseXml(require("xsl/hops.xsl"));
+  xsltProcessor = new XSLTProcessor();
+  xsltProcessor.importStylesheet(xsl);
+  resultDocument = xsltProcessor.transformToFragment(this.data.hops, document);
+  document.getElementById("ingredients").appendChild(resultDocument);
+}
+
+Page.prototype.displayYeasts = function () {
+  xsl = utils.parseXml(require("xsl/yeasts.xsl"));
+  xsltProcessor = new XSLTProcessor();
+  xsltProcessor.importStylesheet(xsl);
+  resultDocument = xsltProcessor.transformToFragment(this.data.yeasts, document);
+  document.getElementById("ingredients").appendChild(resultDocument);
+}
+
 
 Page.prototype.settingsModal = function () {
   this._addModal(require("page-settings.jsx"));
 
-  const dbRefObject = this.firebase.database().ref('settings/' + this.firebase.auth().currentUser.uid + '/');
+  const dbSettingsRefObject = this.firebase.database().ref('settings/' + this.firebase.auth().currentUser.uid + '/');
+  const dbUserRefObject = this.firebase.database().ref('user/' + this.firebase.auth().currentUser.uid + '/');
 
   /*------------------------------------------------
     LISTENERS
    ------------------------------------------------ */
+   dbUserRefObject.child('unit').on('value', function(snapshot) {
+    this.settings.unit = 'metric';
+    if (snapshot.exists()) {
+      this.settings.unit = snapshot.val();
+      document.getElementById('unit').value = this.settings.unit;
+      this.refreshUnits();
+    }
+   }.bind(this));
   // recipes
-  dbRefObject.child('bsmxRecipesUrl').on('value', function(snapshot) {
+  dbSettingsRefObject.child('bsmxRecipesUrl').on('value', function(snapshot) {
     console.log('recipe url updated');
     this.settings.bsmxRecipesUrl = '';
     this.data.recipes = '';
@@ -115,10 +164,13 @@ Page.prototype.settingsModal = function () {
       this.data.recipes = utils.loadXMLDoc(this.settings.bsmxRecipesUrl);
       document.getElementById('bsmx-recipes-url').value = this.settings.bsmxRecipesUrl;
     }
-    this.recipes();
+
+    if (document.getElementById('recipes') !== null) {
+      this.recipes();  
+    }
   }.bind(this));
   // grains
-  dbRefObject.child('bsmxGrainsUrl').on('value', function(snapshot) {
+  dbSettingsRefObject.child('bsmxGrainsUrl').on('value', function(snapshot) {
     console.log('grain url updated');
     this.settings.bsmxGrainsUrl = '';
     this.data.grains = '';
@@ -127,9 +179,12 @@ Page.prototype.settingsModal = function () {
       this.data.grains = utils.loadXMLDoc(this.settings.bsmxGrainsUrl);
       document.getElementById('bsmx-grains-url').value = this.settings.bsmxGrainsUrl;
     }
+    if (document.getElementById('ingredients') !== null) {
+      this.ingredients();  
+    }
   }.bind(this));
   // hops
-  dbRefObject.child('bsmxRecipesUrl').on('value', function(snapshot) {
+  dbSettingsRefObject.child('bsmxHopsUrl').on('value', function(snapshot) {
     console.log('hop url updated');
     this.settings.bsmxHopsUrl = '';
     this.data.hops = '';
@@ -138,9 +193,12 @@ Page.prototype.settingsModal = function () {
       this.data.hops = utils.loadXMLDoc(this.settings.bsmxHopsUrl);
       document.getElementById('bsmx-hops-url').value = this.settings.bsmxHopsUrl;
     }
+    if (document.getElementById('ingredients') !== null) {
+      this.ingredients();  
+    }
   }.bind(this));
   // yeasts
-  dbRefObject.child('bsmxYeastsUrl').on('value', function(snapshot) {
+  dbSettingsRefObject.child('bsmxYeastsUrl').on('value', function(snapshot) {
     console.log('yeast url updated');
     this.settings.bsmxYeastsUrl = '';
     this.data.yeasts = '';
@@ -149,6 +207,9 @@ Page.prototype.settingsModal = function () {
       this.data.yeasts = utils.loadXMLDoc(this.settings.bsmxYeastsUrl);
       document.getElementById('bsmx-yeasts-url').value = this.settings.bsmxYeastsUrl;
     }
+    if (document.getElementById('ingredients') !== null) {
+      this.ingredients();  
+    }
   }.bind(this));
 
   /*------------------------------------------------
@@ -156,10 +217,11 @@ Page.prototype.settingsModal = function () {
    ------------------------------------------------ */
   document.getElementById('btn-settings-save').addEventListener('click', function () {
     console.log("Saving settings");
-    dbRefObject.child('bsmxRecipesUrl').set(document.getElementById('bsmx-recipes-url').value);
-    dbRefObject.child('bsmxGrainsUrl').set(document.getElementById('bsmx-grains-url').value);
-    dbRefObject.child('bsmxHopsUrl').set(document.getElementById('bsmx-hops-url').value);
-    dbRefObject.child('bsmxYeastsUrl').set(document.getElementById('bsmx-yeasts-url').value);
+    dbSettingsRefObject.child('bsmxRecipesUrl').set(document.getElementById('bsmx-recipes-url').value);
+    dbSettingsRefObject.child('bsmxGrainsUrl').set(document.getElementById('bsmx-grains-url').value);
+    dbSettingsRefObject.child('bsmxHopsUrl').set(document.getElementById('bsmx-hops-url').value);
+    dbSettingsRefObject.child('bsmxYeastsUrl').set(document.getElementById('bsmx-yeasts-url').value);
+    dbUserRefObject.child('unit').set(document.getElementById('unit').value);
   }, false);
 
 }

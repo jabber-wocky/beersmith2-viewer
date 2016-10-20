@@ -1,12 +1,26 @@
 body {
-
   padding-top: 30px;
 }
+h1.page-header { padding-bottom:9px; border-bottom:1px solid #eee; margin-bottom:20px; }
+#content { margin-top:40px; }
 
 @media (max-width: 767px) {
   .navbar-nav .open .dropdown-menu > li > .navbar-text {
       padding: 5px 15px 5px 25px;
   }
+}
+
+.navbar-nav legend {
+  margin-bottom:0;
+  font-size:14px;
+  border-bottom:0;
+  font-weight: normal;
+  line-height: 1.42857143;
+}
+
+.navbar-nav .switch-light {
+  padding:3px 20px;
+  margin-bottom:0;
 }
 
 .user {

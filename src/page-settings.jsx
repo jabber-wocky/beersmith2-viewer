@@ -9,6 +9,14 @@ module.exports =
 	      </div>
 	      <div class="modal-body">
 			<div class="form-group">
+				<label for="unit">Units</label>
+				<select id="unit" class="form-control">
+					<option value="metric">Metric</option>
+					<option value="imperial">Imperial (US)</option>
+				</select>
+			</div>			
+
+			<div class="form-group">
 				<label for="bsmx-recipes-url">Recipes</label>
 				<input type="url" class="form-control" id="bsmx-recipes-url" placeholder="">
 			</div>

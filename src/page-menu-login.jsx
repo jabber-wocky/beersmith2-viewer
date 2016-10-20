@@ -3,7 +3,7 @@ module.exports = function (firebaseUser) {
 return `
 <ul class="nav navbar-nav">
   <li><a id="menu-recipe-link" href="#">Recipes</a></li>
-  <li><a href="#">Ingredients</a></li>
+  <li><a id="menu-ingredients-link" href="#">Ingredients</a></li>
 </ul>
 <ul class="nav navbar-nav navbar-right" id="navbar-menu-right">
   <li class="dropdown" id="user-info">
