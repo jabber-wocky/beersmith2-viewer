@@ -44,10 +44,10 @@ Page.prototype.gettingStarted = function () {
 }
 
 Page.prototype.recipes = function () {
-  console.log('recipes');
-  console.log(this.data.recipes);
-  if (this.data.recipes === '' || this.data.recipes === null)
+  if (this.data.recipes === '' || this.data.recipes === null) {
+    this._showHtmlString(require("page-missing.jsx")("recipes"))
     return;
+  }
 
   xsl = utils.parseXml(require("xsl/recipes-list.xsl"));
   xsltProcessor = new XSLTProcessor();
@@ -113,27 +113,42 @@ Page.prototype.ingredients = function () {
 }
 
 Page.prototype.displayGrains = function () {
+  if (this.data.grains === '' || this.data.grains === null) {
+    document.getElementById('grains').innerHTML = require("page-missing.jsx")("grains");
+    return;
+  }
+
   xsl = utils.parseXml(require("xsl/grains.xsl"));
   xsltProcessor = new XSLTProcessor();
   xsltProcessor.importStylesheet(xsl);
   resultDocument = xsltProcessor.transformToFragment(this.data.grains, document);
-  document.getElementById("ingredients").appendChild(resultDocument);
+  document.getElementById("grains").appendChild(resultDocument);
 }
 
 Page.prototype.displayHops = function () {
+  if (this.data.hops === '' || this.data.hops === null) {
+    document.getElementById('hops').innerHTML = require("page-missing.jsx")("hops");
+    return;
+  }
+
   xsl = utils.parseXml(require("xsl/hops.xsl"));
   xsltProcessor = new XSLTProcessor();
   xsltProcessor.importStylesheet(xsl);
   resultDocument = xsltProcessor.transformToFragment(this.data.hops, document);
-  document.getElementById("ingredients").appendChild(resultDocument);
+  document.getElementById("hops").appendChild(resultDocument);
 }
 
 Page.prototype.displayYeasts = function () {
+  if (this.data.yeasts === '' || this.data.yeasts === null) {
+    document.getElementById('yeasts').innerHTML = require("page-missing.jsx")("yeasts");
+    return;
+  }
+
   xsl = utils.parseXml(require("xsl/yeasts.xsl"));
   xsltProcessor = new XSLTProcessor();
   xsltProcessor.importStylesheet(xsl);
   resultDocument = xsltProcessor.transformToFragment(this.data.yeasts, document);
-  document.getElementById("ingredients").appendChild(resultDocument);
+  document.getElementById("yeasts").appendChild(resultDocument);
 }
 
 
@@ -248,6 +263,7 @@ Page.prototype._showHtmlString = function (html) {
   this._clear();
   document.getElementById("content").innerHTML = html;
 }
+
 
 
 

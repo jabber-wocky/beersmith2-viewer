@@ -34,6 +34,10 @@ Utils.prototype.parseXml = function (xmlStr) {
 };
 
 Utils.prototype.loadXMLDoc = function (filename) {
+    if (filename === '' || filename === null) {
+      return '';
+    }
+
     var xhttp;
     if (window.ActiveXObject)
     {

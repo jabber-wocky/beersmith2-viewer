@@ -13960,10 +13960,10 @@
 	}
 
 	Page.prototype.recipes = function () {
-	  console.log('recipes');
-	  console.log(this.data.recipes);
-	  if (this.data.recipes === '' || this.data.recipes === null)
+	  if (this.data.recipes === '' || this.data.recipes === null) {
+	    this._showHtmlString(__webpack_require__(57)("recipes"))
 	    return;
+	  }
 
 	  xsl = utils.parseXml(__webpack_require__(41));
 	  xsltProcessor = new XSLTProcessor();
@@ -14029,27 +14029,42 @@
 	}
 
 	Page.prototype.displayGrains = function () {
+	  if (this.data.grains === '' || this.data.grains === null) {
+	    document.getElementById('grains').innerHTML = __webpack_require__(57)("grains");
+	    return;
+	  }
+
 	  xsl = utils.parseXml(__webpack_require__(52));
 	  xsltProcessor = new XSLTProcessor();
 	  xsltProcessor.importStylesheet(xsl);
 	  resultDocument = xsltProcessor.transformToFragment(this.data.grains, document);
-	  document.getElementById("ingredients").appendChild(resultDocument);
+	  document.getElementById("grains").appendChild(resultDocument);
 	}
 
 	Page.prototype.displayHops = function () {
+	  if (this.data.hops === '' || this.data.hops === null) {
+	    document.getElementById('hops').innerHTML = __webpack_require__(57)("hops");
+	    return;
+	  }
+
 	  xsl = utils.parseXml(__webpack_require__(53));
 	  xsltProcessor = new XSLTProcessor();
 	  xsltProcessor.importStylesheet(xsl);
 	  resultDocument = xsltProcessor.transformToFragment(this.data.hops, document);
-	  document.getElementById("ingredients").appendChild(resultDocument);
+	  document.getElementById("hops").appendChild(resultDocument);
 	}
 
 	Page.prototype.displayYeasts = function () {
+	  if (this.data.yeasts === '' || this.data.yeasts === null) {
+	    document.getElementById('yeasts').innerHTML = __webpack_require__(57)("yeasts");
+	    return;
+	  }
+
 	  xsl = utils.parseXml(__webpack_require__(54));
 	  xsltProcessor = new XSLTProcessor();
 	  xsltProcessor.importStylesheet(xsl);
 	  resultDocument = xsltProcessor.transformToFragment(this.data.yeasts, document);
-	  document.getElementById("ingredients").appendChild(resultDocument);
+	  document.getElementById("yeasts").appendChild(resultDocument);
 	}
 
 
@@ -14164,6 +14179,7 @@
 	  this._clear();
 	  document.getElementById("content").innerHTML = html;
 	}
+
 
 
 
@@ -31217,6 +31233,10 @@
 	};
 
 	Utils.prototype.loadXMLDoc = function (filename) {
+	    if (filename === '' || filename === null) {
+	      return '';
+	    }
+
 	    var xhttp;
 	    if (window.ActiveXObject)
 	    {
@@ -31778,7 +31798,9 @@
 	module.exports = `
 	<h1 class="page-header">Ingredients</h1>
 	<div id="ingredients">
-
+		<div id="grains"></div>
+		<div id="hops"></div>
+		<div id="yeasts"></div>
 	</div>
 	`;
 
@@ -31799,6 +31821,50 @@
 /***/ function(module, exports) {
 
 	module.exports = "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\r\n<xsl:stylesheet version=\"1.0\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\">\r\n\r\n    <xsl:template match=\"/\">\r\n        <h2>Yeast</h2>\r\n        <table class=\"table\">\r\n            <thead>\r\n                <tr>\r\n                    <th>Name (Product ID)</th>\r\n                    <th>Lab</th>\r\n                    <th>Type</th>\r\n                    <th>Form</th>\r\n                    <th>Inventory</th>\r\n                    <th>Price</th>\r\n                </tr>\r\n            </thead>\r\n            <tbody>\r\n                <xsl:for-each select=\"//Yeast[boolean(./F_Y_NAME) and ./F_Y_INVENTORY != 0.0000000]\">\r\n                    <xsl:sort select=\"./F_Y_NAME\" />\r\n\r\n                    <tr>\r\n                        <td><xsl:value-of select=\"F_Y_NAME\" /> (<xsl:value-of select=\"F_Y_PRODUCT_ID\" />)</td>\r\n                        <td><xsl:value-of select=\"F_Y_LAB\" /></td>\r\n                        <td>\r\n                            <xsl:choose>\r\n                                <xsl:when test=\"F_Y_TYPE = 0\">Ale</xsl:when>\r\n                                <xsl:when test=\"F_Y_TYPE = 1\">Lager</xsl:when>\r\n                                <xsl:when test=\"F_Y_TYPE = 2\">Wine</xsl:when>\r\n                                <xsl:when test=\"F_Y_TYPE = 3\">Champagne</xsl:when>\r\n                                <xsl:when test=\"F_Y_TYPE = 4\">Wheat</xsl:when>\r\n                                <xsl:otherwise></xsl:otherwise>\r\n                            </xsl:choose>\r\n                        </td>\r\n                        <td>\r\n                            <xsl:choose>\r\n                                <xsl:when test=\"F_Y_FORM = 0\">Liquid</xsl:when>\r\n                                <xsl:when test=\"F_Y_FORM = 1\">Dry</xsl:when>\r\n                                <xsl:when test=\"F_Y_FORM = 2\">Slant</xsl:when>\r\n                                <xsl:when test=\"F_Y_FORM = 3\">Culture</xsl:when>\r\n                                <xsl:otherwise></xsl:otherwise>\r\n                            </xsl:choose>\r\n                        </td>\r\n                        <td><xsl:value-of select=\"format-number(round(F_Y_INVENTORY*10) div 10, '##0.0')\" /> pkgs</td>\r\n                        <td><xsl:value-of select=\"format-number(round(F_Y_PRICE*100) div 100, '##0.00')\" /> $/pkg</td>\r\n                    </tr>\r\n                </xsl:for-each>\r\n            </tbody>\r\n        </table>\r\n    </xsl:template>\r\n</xsl:stylesheet>"
+
+/***/ },
+/* 55 */,
+/* 56 */,
+/* 57 */
+/***/ function(module, exports) {
+
+	module.exports = function (type) {
+		if (type === "recipes") {
+			return `
+			<h1 class="page-header">Recipes</h1>
+			<div id="recipes">
+				<div class="alert alert-warning">
+				  <strong>Recipes not configured!</strong><br />
+				  Please make sure to add your recipe.bsmx url to your <a href="#" data-toggle="modal" data-target="#modal-settings">settings</a>. 
+				</div>
+			</div>
+			`;
+		} else if (type === "grains") {
+			return `
+			<h2>Grain</h2>
+			<div class="alert alert-warning">
+			  <strong>Grain not configured!</strong><br />
+			  Please make sure to add your grain.bsmx url to your <a href="#" data-toggle="modal" data-target="#modal-settings">settings</a>. 
+			</div>
+			`;
+		} else if (type === "hops") {
+			return `
+			<h2>Hops</h2>
+			<div class="alert alert-warning">
+			  <strong>Hops not configured!</strong><br />
+			  Please make sure to add your hops.bsmx url to your <a href="#" data-toggle="modal" data-target="#modal-settings">settings</a>. 
+			</div>
+			`;
+		} else if (type === "yeasts") {
+			return `
+			<h2>Yeast</h2>
+			<div class="alert alert-warning">
+			  <strong>Yeast not configured!</strong><br />
+			  Please make sure to add your yeasts.bsmx url to your <a href="#" data-toggle="modal" data-target="#modal-settings">settings</a>. 
+			</div>
+			`;
+		}
+	};
 
 /***/ }
 /******/ ]);
