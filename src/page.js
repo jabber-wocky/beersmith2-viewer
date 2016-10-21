@@ -156,7 +156,7 @@ Page.prototype.settingsModal = function () {
   this._addModal(require("page-settings.jsx"));
 
   const dbSettingsRefObject = this.firebase.database().ref('settings/' + this.firebase.auth().currentUser.uid + '/');
-  const dbUserRefObject = this.firebase.database().ref('user/' + this.firebase.auth().currentUser.uid + '/');
+  const dbUserRefObject = this.firebase.database().ref('users/' + this.firebase.auth().currentUser.uid + '/');
 
   /*------------------------------------------------
     LISTENERS

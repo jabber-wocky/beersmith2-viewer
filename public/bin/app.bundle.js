@@ -14072,7 +14072,7 @@
 	  this._addModal(__webpack_require__(45));
 
 	  const dbSettingsRefObject = this.firebase.database().ref('settings/' + this.firebase.auth().currentUser.uid + '/');
-	  const dbUserRefObject = this.firebase.database().ref('user/' + this.firebase.auth().currentUser.uid + '/');
+	  const dbUserRefObject = this.firebase.database().ref('users/' + this.firebase.auth().currentUser.uid + '/');
 
 	  /*------------------------------------------------
 	    LISTENERS
